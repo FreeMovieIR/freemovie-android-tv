@@ -1,0 +1,53 @@
+name: freemovie_android_tv
+description: "FreeMovie"
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+version: 1.0.0+1
+
+
+environment:
+  sdk: ^3.6.2
+
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  cached_network_image: ^3.3.1
+  lottie: ^2.7.0
+  flutter_bloc: ^9.1.0
+  bloc: ^9.0.0
+  equatable: ^2.0.7
+  dio: ^5.8.0+1
+
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_gen_runner: ^5.8.0
+  build_runner: ^2.4.14
+
+flutter_gen:
+  integrations:
+    flutter_svg: true
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/animations/
+    - assets/fonts/
+  fonts:
+    - family: Vazir
+      fonts:
+        - asset: assets/fonts/Vazirmatn-FD-Black.ttf
+        - asset: assets/fonts/Vazirmatn-FD-Bold.ttf
+        - asset: assets/fonts/Vazirmatn-FD-ExtraBold.ttf
+        - asset: assets/fonts/Vazirmatn-FD-ExtraLight.ttf
+        - asset: assets/fonts/Vazirmatn-FD-Light.ttf
+        - asset: assets/fonts/Vazirmatn-FD-Medium.ttf
+        - asset: assets/fonts/Vazirmatn-FD-Regular.ttf
+        - asset: assets/fonts/Vazirmatn-FD-SemiBold.ttf
+        - asset: assets/fonts/Vazirmatn-FD-Thin.ttf
