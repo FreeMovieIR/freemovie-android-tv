@@ -74,7 +74,7 @@ class MovieCard extends StatelessWidget {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                height: 80,
+                height: 100,
                 child: Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -96,7 +96,7 @@ class MovieCard extends StatelessWidget {
                   children: [
                     // Movie title
                     Text(
-                      movie.title,
+                      movie.originalTitle,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -105,9 +105,20 @@ class MovieCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
+                    movie.title != movie.originalTitle
+                        ? Text(
+                            movie.title,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w400,
+                              fontSize: 12,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          )
+                        : SizedBox(),
                     const SizedBox(height: 2),
 
-                    // Rating and year
                     Row(
                       children: [
                         const Icon(

@@ -73,7 +73,7 @@ class TvShowCard extends StatelessWidget {
                 left: 0,
                 right: 0,
                 bottom: 0,
-                height: 80,
+                height: 100,
                 child: Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -98,7 +98,7 @@ class TvShowCard extends StatelessWidget {
                   children: [
                     // TV show name
                     Text(
-                      tvShow.title,
+                      tvShow.originalTitle,
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -107,9 +107,22 @@ class TvShowCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
+
+                    tvShow.title != tvShow.originalTitle
+                        ? Text(
+                            tvShow.title,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w400,
+                              fontSize: 12,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          )
+                        : SizedBox(),
+
                     const SizedBox(height: 2),
 
-                    // Rating, year, and seasons
                     Row(
                       children: [
                         const Icon(
@@ -125,14 +138,6 @@ class TvShowCard extends StatelessWidget {
                             fontSize: 10,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        // Text(
-                        //   '${tvShow.firstAirDate.substring(0, 4)} • ${tvShow.seasons} ${tvShow.seasons > 1 ? 'فصل' : 'فصل'}',
-                        //   style: const TextStyle(
-                        //     color: Colors.white70,
-                        //     fontSize: 10,
-                        //   ),
-                        // ),
                       ],
                     ),
                   ],
