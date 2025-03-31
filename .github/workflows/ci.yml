@@ -28,7 +28,7 @@ jobs:
         run: flutter build apk --dart-define="TMDB_BASE_URL=${{ secrets.TMDB_BASE_URL }}" --dart-define="TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}" --dart-define="OMDB_BASE_URL=${{ secrets.OMDB_BASE_URL }}" --dart-define="OMDB_API_KEY=${{ secrets.OMDB_API_KEY }}"
 
       - name: Upload APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v2  # از نسخه v2 استفاده می‌کنیم
         with:
           name: FreeMovie-APK
           path: build/app/outputs/flutter-apk/app-release.apk
