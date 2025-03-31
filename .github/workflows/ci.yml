@@ -11,21 +11,28 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # به‌روزرسانی به نسخه v4
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.16.0"
+          flutter-version: "3.16.0" # تأیید صحت نسخه
+          cache: true # فعال‌سازی کش برای وابستگی‌ها
 
       - name: Install dependencies
         run: flutter pub get
 
       - name: Build APK
-        run: flutter build apk --dart-define="TMDB_BASE_URL=https://api.themoviedb.org/3/" --dart-define="TMDB_API_KEY=1dc4cbf81f0accf4fa108820d551dafc" --dart-define="OMDB_BASE_URL=http://www.omdbapi.com/" --dart-define="OMDB_API_KEY=7fd2776e"
+        run: |
+          flutter build apk \
+            --dart-define="TMDB_BASE_URL=${{ secrets.TMDB_BASE_URL }}" \
+            --dart-define="TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}" \
+            --dart-define="OMDB_BASE_URL=${{ secrets.OMDB_BASE_URL }}" \
+            --dart-define="OMDB_API_KEY=${{ secrets.OMDB_API_KEY }}"
+        # استفاده از GitHub Secrets برای کلیدهای API
 
       - name: Upload APK
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # به‌روزرسانی به نسخه v4
         with:
           name: FreeMovie-APK
           path: build/app/outputs/flutter-apk/app-release.apk

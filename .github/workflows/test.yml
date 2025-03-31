@@ -7,13 +7,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # به‌روزرسانی به نسخه v4
 
       - name: Create Test File
-        run: echo "Hello World" > test.txt
+        run: echo "Hello World $(date +%s)" > test.txt # افزودن timestamp برای منحصر به فرد بودن
 
       - name: Upload Test File
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4 # به‌روزرسانی به نسخه v4
         with:
-          name: test-file
+          name: test-file-${{ github.run_id }} # نام منحصر به فرد برای آرتیفکت
           path: test.txt
