@@ -1,0 +1,19 @@
+name: Test Upload Artifact
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create Test File
+        run: echo "Hello World" > test.txt
+
+      - name: Upload Test File
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-file
+          path: test.txt
