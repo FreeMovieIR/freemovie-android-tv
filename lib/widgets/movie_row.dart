@@ -10,12 +10,14 @@ class MovieRow extends StatefulWidget {
   final String title;
   final List<MovieModel> movies;
   final bool isFocused;
+  final Map<int, String>? posterPaths;
 
   const MovieRow({
     super.key,
     required this.title,
     required this.movies,
     this.isFocused = false,
+    this.posterPaths,
   });
 
   @override
@@ -171,6 +173,7 @@ class _MovieRowState extends State<MovieRow> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               itemBuilder: (context, index) {
                 final movie = widget.movies[index];
+                final String? posterUrl = widget.posterPaths?[movie.id];
 
                 return Focus(
                   focusNode: _cardFocusNodes[index],
@@ -189,6 +192,7 @@ class _MovieRowState extends State<MovieRow> {
                   },
                   child: MovieCard(
                     movie: movie,
+                    posterUrl: posterUrl,
                     isFocused: widget.isFocused && index == _focusedIndex,
                     onTap: () {
                       _processingFocusEvent = true;

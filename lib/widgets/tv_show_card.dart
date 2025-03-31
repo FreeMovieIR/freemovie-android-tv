@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:freemovie_android_tv/widgets/shimmers.dart';
 
 import '../data/model/tv_show.dart';
 
@@ -7,12 +8,14 @@ class TvShowCard extends StatelessWidget {
   final TvShowModel tvShow;
   final bool isFocused;
   final VoidCallback? onTap;
+  final String? posterUrl;
 
   const TvShowCard({
     super.key,
     required this.tvShow,
     this.isFocused = false,
     this.onTap,
+    this.posterUrl,
   });
 
   @override
@@ -43,27 +46,27 @@ class TvShowCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           child: Stack(
             children: [
-              // TV show poster
-              Positioned.fill(
-                child: CachedNetworkImage(
-                  imageUrl: tvShow.posterPath,
-                  fit: BoxFit.cover,
-                  placeholder: (context, url) => Container(
-                    color: Colors.grey[900],
-                    child: const Center(
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
+              posterUrl == null
+                  ? defBoxShim(
+                      width: 140,
+                      height: isFocused ? 210 : 190,
+                    )
+                  : Positioned.fill(
+                      child: CachedNetworkImage(
+                        imageUrl: posterUrl!,
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => defBoxShim(
+                          width: 140,
+                          height: isFocused ? 210 : 190,
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          color: Colors.grey[900],
+                          child: const Center(
+                            child: Icon(Icons.error, size: 30),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                  errorWidget: (context, url, error) => Container(
-                    color: Colors.grey[900],
-                    child: const Center(
-                      child: Icon(Icons.error, size: 30),
-                    ),
-                  ),
-                ),
-              ),
 
               // Gradient overlay for text visibility
               Positioned(

@@ -2,12 +2,13 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../data/model/movie.dart';
 import '../../../data/model/tv_show.dart';
 import '../../../data/repo/home_repo.dart';
-import '../../../utils/enums/data_status.dart';
+import '../../../utils/enums/media_type.dart';
 
 part 'home_event.dart';
 part 'home_state.dart';
@@ -25,6 +26,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<HomeNavFocused>(_onNavFocused);
     on<HomeSectionFocused>(_onSectionFocused);
     on<HomeKeyPressed>(_onKeyPressed);
+    on<HomePosterFetched>(_onPosterFetched);
   }
 
   @override
@@ -119,22 +121,116 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   }
 
   Future<void> _onLoadData(HomeLoadData event, Emitter<HomeState> emit) async {
+    emit(HomeLoading(
+      focusedSectionIndex: state.focusedSectionIndex,
+      focusedNavIndex: state.focusedNavIndex,
+      scrollToOffset: state.scrollToOffset,
+    ));
+
     try {
-      emit(state.copyWith(status: DataStatus.loading));
+      final List<MovieModel> trendingMovies = await _homeRepository.getRawTrendingMovies();
 
-      final List<MovieModel> trendingMovies = await _homeRepository.getTrendingMovies();
-      final List<TvShowModel> trendingShows = await _homeRepository.getTrendingTvShows();
+      emit(HomeMoviesLoaded(
+        focusedSectionIndex: state.focusedSectionIndex,
+        focusedNavIndex: state.focusedNavIndex,
+        scrollToOffset: state.scrollToOffset,
+        trendingMovies: trendingMovies,
+      ));
 
-      emit(state.copyWith(
-        status: DataStatus.loaded,
+      final List<TvShowModel> trendingShows = await _homeRepository.getRawTrendingTvShows();
+      final Map<int, String> moviePosters = {};
+
+      emit(HomeTvShowsLoaded(
+        focusedSectionIndex: state.focusedSectionIndex,
+        focusedNavIndex: state.focusedNavIndex,
+        scrollToOffset: state.scrollToOffset,
         trendingMovies: trendingMovies,
         trendingTvShows: trendingShows,
-        clearErrorMessage: true,
+        moviePosters: moviePosters,
+      ));
+
+      _fetchPostersInBackground(trendingMovies, trendingShows);
+
+      final currentFocusState = state;
+      emit(HomeLoaded(
+        focusedSectionIndex: currentFocusState.focusedSectionIndex,
+        focusedNavIndex: currentFocusState.focusedNavIndex,
+        scrollToOffset: currentFocusState.scrollToOffset,
+        trendingMovies: trendingMovies,
+        trendingTvShows: trendingShows,
+        moviePosters: moviePosters,
+        // Initial empty maps
+        tvShowPosters: {}, // Initial empty maps
       ));
     } catch (e) {
-      emit(state.copyWith(
-        status: DataStatus.error,
+      // Emit Error state with the error message, preserving focus
+      emit(HomeError(
+        focusedSectionIndex: state.focusedSectionIndex,
+        focusedNavIndex: state.focusedNavIndex,
+        scrollToOffset: state.scrollToOffset,
         errorMessage: e.toString(),
+        // Optionally add previous data if needed for display
+      ));
+    }
+  }
+
+  void _fetchPostersInBackground(List<MovieModel> movies, List<TvShowModel> shows) {
+    // Fetch movie posters
+    for (final movie in movies) {
+      _homeRepository.getPoster(movie.id, MediaType.movie).then((posterPath) {
+        if (posterPath != null) {
+          add(HomePosterFetched(
+              mediaType: MediaType.movie, mediaId: movie.id, posterPath: posterPath));
+        }
+      }).catchError((error) {
+        debugPrint("Error fetching poster for movie ${movie.id}: $error");
+      });
+    }
+
+    // Fetch TV show posters
+    for (final show in shows) {
+      _homeRepository.getPoster(show.id, MediaType.tv).then((posterPath) {
+        if (posterPath != null) {
+          add(HomePosterFetched(mediaType: MediaType.tv, mediaId: show.id, posterPath: posterPath));
+        }
+      }).catchError((error) {
+        debugPrint("Error fetching poster for show ${show.id}: $error");
+      });
+    }
+  }
+
+  void _onPosterFetched(HomePosterFetched event, Emitter<HomeState> emit) {
+    if (state is HomeLoaded || state is HomeTvShowsLoaded) {
+      Map<int, String> currentMoviePosters = {};
+      Map<int, String> currentTvShowPosters = {};
+
+      if (state is HomeLoaded) {
+        final currentState = state as HomeLoaded;
+        currentMoviePosters = Map.from(currentState.moviePosters);
+        currentTvShowPosters = Map.from(currentState.tvShowPosters);
+      } else if (state is HomeTvShowsLoaded) {
+        final currentState = state as HomeTvShowsLoaded;
+        currentMoviePosters = Map.from(currentState.moviePosters);
+      }
+
+      if (event.mediaType == MediaType.movie) {
+        currentMoviePosters[event.mediaId] = event.posterPath!;
+      } else {
+        currentTvShowPosters[event.mediaId] = event.posterPath!;
+      }
+
+      emit(HomeLoaded(
+        focusedSectionIndex: state.focusedSectionIndex,
+        focusedNavIndex: state.focusedNavIndex,
+        scrollToOffset: state.scrollToOffset,
+        trendingMovies: (state is HomeLoaded)
+            ? (state as HomeLoaded).trendingMovies
+            : (state as HomeTvShowsLoaded).trendingMovies,
+        trendingTvShows: (state is HomeLoaded)
+            ? (state as HomeLoaded).trendingTvShows
+            : (state as HomeTvShowsLoaded).trendingTvShows,
+        moviePosters: currentMoviePosters,
+        tvShowPosters: currentTvShowPosters,
       ));
     }
   }

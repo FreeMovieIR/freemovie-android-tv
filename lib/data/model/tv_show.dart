@@ -5,7 +5,6 @@ class TvShowModel {
   final String overview;
   final String originalLanguage;
   final String originCountry;
-  final String posterPath;
   final String releaseDate;
   final double vote;
 
@@ -16,7 +15,6 @@ class TvShowModel {
       required this.overview,
       required this.originalLanguage,
       required this.originCountry,
-      required this.posterPath,
       required this.releaseDate,
       required this.vote});
 
@@ -28,7 +26,6 @@ class TvShowModel {
         originalLanguage = json['original_language'],
         originCountry =
             (json['origin_country'] as List).isNotEmpty ? json['origin_country'][0] : '',
-        posterPath = json['poster_path'] ?? 'null',
         releaseDate = json['first_air_date'],
         vote = json['vote_average'] ?? -1;
 
@@ -38,7 +35,6 @@ class TvShowModel {
     String? overview,
     String? originalLanguage,
     String? originCountry,
-    String? posterPath,
     String? originalTitle,
     String? releaseDate,
     double? vote,
@@ -49,7 +45,6 @@ class TvShowModel {
       overview: overview ?? this.overview,
       originalLanguage: originalLanguage ?? this.originalLanguage,
       originCountry: originCountry ?? this.originCountry,
-      posterPath: posterPath ?? this.posterPath,
       originalTitle: originalTitle ?? this.originalTitle,
       releaseDate: releaseDate ?? this.releaseDate,
       vote: vote ?? this.vote,

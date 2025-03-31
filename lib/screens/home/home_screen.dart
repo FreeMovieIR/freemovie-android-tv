@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freemovie_android_tv/gen/assets.gen.dart';
 
+import '../../data/model/movie.dart';
+import '../../data/model/tv_show.dart';
 import '../../data/repo/home_repo.dart';
-import '../../gen/assets.gen.dart';
-import '../../utils/enums/data_status.dart';
 import '../../widgets/movie_row.dart';
 import '../../widgets/tv_show_row.dart';
 import 'bloc/home_bloc.dart';
@@ -137,72 +138,92 @@ class _HomeViewState extends State<_HomeView> {
   }
 
   Widget _buildBody(BuildContext context, HomeState homeState) {
-    switch (homeState.status) {
-      case DataStatus.loading:
-        return const Center(child: CircularProgressIndicator());
-      case DataStatus.error:
-        return Center(child: Text('خطا: ${homeState.errorMessage ?? "Unknown error"}'));
-      case DataStatus.loaded:
-        final latestMovies = homeState.trendingMovies;
-        final popularTvShows = homeState.trendingTvShows;
+    List<MovieModel> latestMovies = [];
+    List<TvShowModel> popularTvShows = [];
+    Map<int, String> moviePosters = {};
+    Map<int, String> tvShowPosters = {};
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              child: Row(
-                children: [
-                  Assets.images.logo.image(width: 100),
-                  SizedBox(width: 12),
-                  const Text(
-                    'فیری مووی',
-                    style:
-                        TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                  const Spacer(),
-                  // Build Navigation Items using BLoC state
-                  _buildNavigationItem(
-                    context,
-                    'تنظیمات',
-                    icon: Icons.settings,
-                    isSelected: homeState.focusedNavIndex == 0,
-                    focusNode: _navFocusNodes[0],
-                    index: 0,
-                  ),
-                  _buildNavigationItem(
-                    context,
-                    'جستجو',
-                    icon: Icons.search,
-                    isSelected: homeState.focusedNavIndex == 1,
-                    focusNode: _navFocusNodes[1],
-                    index: 1,
-                  ),
-                  _buildNavigationItem(
-                    context,
-                    'نشان‌شده‌ها',
-                    icon: Icons.bookmark,
-                    isSelected: homeState.focusedNavIndex == 2,
-                    focusNode: _navFocusNodes[2],
-                    index: 2,
-                  ),
-                  _buildNavigationItem(
-                    context,
-                    'خانه',
-                    icon: Icons.home,
-                    isSelected: homeState.focusedNavIndex == 3,
-                    focusNode: _navFocusNodes[3],
-                    index: 3,
-                  ),
-                ],
-              ),
+    // Assign data based on the actual state type
+    if (homeState is HomeMoviesLoaded) {
+      latestMovies = homeState.trendingMovies;
+    } else if (homeState is HomeTvShowsLoaded) {
+      latestMovies = homeState.trendingMovies;
+      popularTvShows = homeState.trendingTvShows;
+      moviePosters = homeState.moviePosters;
+    } else if (homeState is HomeLoaded) {
+      latestMovies = homeState.trendingMovies;
+      popularTvShows = homeState.trendingTvShows;
+      moviePosters = homeState.moviePosters;
+      tvShowPosters = homeState.tvShowPosters;
+    }
+
+    if (homeState is HomeLoading || homeState is HomeInitial) {
+      return const Center(child: CircularProgressIndicator());
+    } else if (homeState is HomeError) {
+      return Center(child: Text('خطا: ${homeState.errorMessage ?? "خطای ناشناخته!"}'));
+    } else {
+      if (homeState is HomeLoaded && latestMovies.isEmpty && popularTvShows.isEmpty) {
+        return const Center(child: Text('محتوایی برای نمایش وجود ندارد.'));
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Row
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+            child: Row(
+              children: [
+                Assets.images.logo.image(height: 38),
+                SizedBox(width: 12),
+                const Text(
+                  'فیری مووی',
+                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
+                const Spacer(),
+                _buildNavigationItem(
+                  context,
+                  'تنظیمات',
+                  icon: Icons.settings,
+                  isSelected: homeState.focusedNavIndex == 0,
+                  focusNode: _navFocusNodes[0],
+                  index: 0,
+                ),
+                _buildNavigationItem(
+                  context,
+                  'جستجو',
+                  icon: Icons.search,
+                  isSelected: homeState.focusedNavIndex == 1,
+                  focusNode: _navFocusNodes[1],
+                  index: 1,
+                ),
+                _buildNavigationItem(
+                  context,
+                  'نشان‌شده‌ها',
+                  icon: Icons.bookmark,
+                  isSelected: homeState.focusedNavIndex == 2,
+                  focusNode: _navFocusNodes[2],
+                  index: 2,
+                ),
+                _buildNavigationItem(
+                  context,
+                  'خانه',
+                  icon: Icons.home,
+                  isSelected: homeState.focusedNavIndex == 3,
+                  focusNode: _navFocusNodes[3],
+                  index: 3,
+                ),
+              ],
             ),
-            Expanded(
-              child: ListView(
-                controller: _scrollController,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                children: [
-                  // Latest Movies Section
+          ),
+
+          Expanded(
+            child: ListView(
+              controller: _scrollController,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              children: [
+                // Latest Movies Section
+                if (latestMovies.isNotEmpty)
                   _buildContentSection(
                     context,
                     focusNode: _sectionFocusNodes[0],
@@ -210,9 +231,13 @@ class _HomeViewState extends State<_HomeView> {
                     child: MovieRow(
                       title: 'جدیدترین فیلم‌ها',
                       movies: latestMovies,
+                      posterPaths: moviePosters,
                       isFocused: homeState.focusedSectionIndex == 0,
                     ),
                   ),
+                // Popular TV Shows Section
+                if (popularTvShows.isNotEmpty &&
+                    (homeState is HomeTvShowsLoaded || homeState is HomeLoaded))
                   _buildContentSection(
                     context,
                     focusNode: _sectionFocusNodes[1],
@@ -220,14 +245,15 @@ class _HomeViewState extends State<_HomeView> {
                     child: TvShowRow(
                       title: 'سریال‌های محبوب',
                       tvShows: popularTvShows,
+                      posterPaths: tvShowPosters,
                       isFocused: homeState.focusedSectionIndex == 1,
                     ),
                   ),
-                ],
-              ),
+              ],
             ),
-          ],
-        );
+          ),
+        ],
+      );
     }
   }
 

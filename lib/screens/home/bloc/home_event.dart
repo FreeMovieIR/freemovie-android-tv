@@ -18,6 +18,21 @@ final class HomeKeyPressed extends HomeEvent {
   List<Object?> get props => [logicalKey];
 }
 
+final class HomePosterFetched extends HomeEvent {
+  final MediaType mediaType;
+  final int mediaId;
+  final String? posterPath;
+
+  const HomePosterFetched({
+    required this.mediaType,
+    required this.mediaId,
+    required this.posterPath,
+  });
+
+  @override
+  List<Object?> get props => [mediaType, mediaId, posterPath];
+}
+
 final class HomeNavFocused extends HomeEvent {
   final int navIndex;
 

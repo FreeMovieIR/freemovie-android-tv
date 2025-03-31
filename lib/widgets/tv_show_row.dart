@@ -10,12 +10,14 @@ class TvShowRow extends StatefulWidget {
   final String title;
   final List<TvShowModel> tvShows;
   final bool isFocused;
+  final Map<int, String>? posterPaths;
 
   const TvShowRow({
     super.key,
     required this.title,
     required this.tvShows,
     this.isFocused = false,
+    this.posterPaths,
   });
 
   @override
@@ -170,6 +172,7 @@ class _TvShowRowState extends State<TvShowRow> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               itemBuilder: (context, index) {
                 final tvShow = widget.tvShows[index];
+                final String? posterUrl = widget.posterPaths?[tvShow.id];
 
                 return Focus(
                   focusNode: _cardFocusNodes[index],
@@ -188,6 +191,7 @@ class _TvShowRowState extends State<TvShowRow> {
                   },
                   child: TvShowCard(
                     tvShow: tvShow,
+                    posterUrl: posterUrl,
                     isFocused: widget.isFocused && index == _focusedIndex,
                     onTap: () {
                       _processingFocusEvent = true;

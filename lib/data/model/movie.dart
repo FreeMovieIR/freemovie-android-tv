@@ -4,7 +4,6 @@ class MovieModel {
   final String originalTitle;
   final String overview;
   final String originalLanguage;
-  final String posterPath;
   final String releaseDate;
   final double vote;
 
@@ -14,7 +13,6 @@ class MovieModel {
       required this.originalTitle,
       required this.overview,
       required this.originalLanguage,
-      required this.posterPath,
       required this.releaseDate,
       required this.vote});
 
@@ -24,7 +22,6 @@ class MovieModel {
         title = json['title'] ?? 'null',
         originalTitle = json['original_title'] ?? 'null',
         originalLanguage = json['original_language'] ?? 'null',
-        posterPath = json['poster_path'] ?? 'null',
         releaseDate = json['release_date'] ?? 'null',
         vote = json['vote_average'] ?? -1;
 
@@ -33,7 +30,6 @@ class MovieModel {
     String? title,
     String? overview,
     String? originalLanguage,
-    String? posterPath,
     String? originalTitle,
     String? releaseDate,
     double? vote,
@@ -43,7 +39,6 @@ class MovieModel {
       title: title ?? this.title,
       overview: overview ?? this.overview,
       originalLanguage: originalLanguage ?? this.originalLanguage,
-      posterPath: posterPath ?? this.posterPath,
       originalTitle: originalTitle ?? this.originalTitle,
       releaseDate: releaseDate ?? this.releaseDate,
       vote: vote ?? this.vote,
