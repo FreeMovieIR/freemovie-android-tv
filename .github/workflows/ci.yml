@@ -16,23 +16,19 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.16.0" # تأیید صحت نسخه
-          cache: true # فعال‌سازی کش برای وابستگی‌ها
+          flutter-version: "3.16.9" # Updated to a more recent version compatible with SDK ^3.6.2
+          channel: "stable"
+          cache: true
 
       - name: Install dependencies
         run: flutter pub get
 
       - name: Build APK
-        run: |
-          flutter build apk \
-            --dart-define="TMDB_BASE_URL=${{ secrets.TMDB_BASE_URL }}" \
-            --dart-define="TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}" \
-            --dart-define="OMDB_BASE_URL=${{ secrets.OMDB_BASE_URL }}" \
-            --dart-define="OMDB_API_KEY=${{ secrets.OMDB_API_KEY }}"
+        run: flutter build apk --dart-define="TMDB_BASE_URL=${{ secrets.TMDB_BASE_URL }}" --dart-define="TMDB_API_KEY=${{ secrets.TMDB_API_KEY }}" --dart-define="OMDB_BASE_URL=${{ secrets.OMDB_BASE_URL }}" --dart-define="OMDB_API_KEY=${{ secrets.OMDB_API_KEY }}"
         # استفاده از GitHub Secrets برای کلیدهای API
 
       - name: Upload APK
-        uses: actions/upload-artifact@v4 # به‌روزرسانی به نسخه v4
+        uses: actions/upload-artifact@v4
         with:
           name: FreeMovie-APK
           path: build/app/outputs/flutter-apk/app-release.apk
