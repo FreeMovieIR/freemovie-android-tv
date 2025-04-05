@@ -40,13 +40,14 @@ class MyApp extends StatelessWidget {
         ],
         supportedLocales: const [Locale('fa', 'IR')],
         theme: ThemeData(
-          scaffoldBackgroundColor: const Color(0xFF0F111D),
+          scaffoldBackgroundColor: const Color(0xFF020618),
           primaryColor: const Color(0xFF4A148C),
           fontFamily: 'Vazir',
+          // focusColor: Colors.transparent,
           colorScheme: const ColorScheme.dark(
-            primary: Color(0xFF4A148C),
-            secondary: Color(0xFF6A1B9A),
-            surface: Color(0xFF0F111D),
+            primary: Color(0xFFBEDBFF),
+            secondary: Color(0xFF1447E6),
+            surface: Color(0xFF0F172B),
           ),
           textTheme: const TextTheme(
             bodyLarge: TextStyle(color: Colors.white, fontFamily: 'Vazir'),

@@ -61,7 +61,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     // Logic for NavigationBar Focus (currentNavIndex >= 0)
     if (currentNavIndex >= 0) {
       if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-        if (currentNavIndex < 3) {
+        if (currentNavIndex < 5) {
           currentNavIndex++;
         }
       } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
@@ -91,10 +91,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           currentSectionIndex = 0;
           scrollToOffset = 0; // Scroll up to Movies
         }
-        // Move from Movies (0) to Nav Bar (Home: 3)
+        // Move from Movies (0) to Nav Bar (Home: 0)
         else if (currentSectionIndex == 0) {
           currentSectionIndex = -1;
-          currentNavIndex = 3; // Default to Home nav item
+          currentNavIndex = 0; // Default to Home nav item
         }
       }
       // TODO: Handle Left/Right arrows within sections (movie/tv show items)

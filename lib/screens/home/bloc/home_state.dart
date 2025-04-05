@@ -90,7 +90,7 @@ sealed class HomeState extends Equatable {
 final class HomeInitial extends HomeState {
   const HomeInitial({
     super.focusedSectionIndex = -1,
-    super.focusedNavIndex = 3, // Start with Home focused
+    super.focusedNavIndex = 0, // Start with Home focused
     super.scrollToOffset,
   });
 }

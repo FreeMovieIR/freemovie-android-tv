@@ -22,6 +22,7 @@ dependencies:
   dio: ^5.8.0+1
   shimmer: ^3.0.0
   shared_preferences: ^2.5.3
+  flutter_svg: ^2.0.17
 
 
 dev_dependencies:
@@ -39,6 +40,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/images/icons/
     - assets/animations/
     - assets/fonts/
     - assets/omdb_keys.json
