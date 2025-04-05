@@ -20,42 +20,46 @@ class MovieCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         margin: EdgeInsets.symmetric(
-          horizontal: 8,
-          vertical: isFocused ? 5 : 16,
+          horizontal: isFocused ? 4 / devicePixelRatio : 12 / devicePixelRatio,
+          vertical: isFocused ? 4 / devicePixelRatio : 16 / devicePixelRatio,
         ),
-        width: 140,
-        height: isFocused ? 210 : 190,
+        width: isFocused ? 212 / devicePixelRatio : 196 / devicePixelRatio,
+        height: isFocused ? 434 / devicePixelRatio : 410 / devicePixelRatio,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(16 / devicePixelRatio),
           boxShadow: isFocused
               ? [
                   BoxShadow(
                     color: const Color(0xFF6A1B9A).withAlpha(125),
-                    blurRadius: 10,
+                    blurRadius: 16 / devicePixelRatio,
                     spreadRadius: 2,
                   )
                 ]
               : [],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Stack(
+          borderRadius: BorderRadius.circular(16 / devicePixelRatio),
+          child: Column(
             children: [
               // Movie poster
               posterUrl == null
                   ? defBoxShim(
-                      width: 140,
-                      height: isFocused ? 210 : 190,
+                      width: isFocused ? 212 / devicePixelRatio : 196 / devicePixelRatio,
+                      height: 348 / devicePixelRatio,
                     )
                   : Positioned.fill(
                       child: CachedNetworkImage(
                         imageUrl: posterUrl!,
                         fit: BoxFit.cover,
+                        width: isFocused ? 212 / devicePixelRatio : 196 / devicePixelRatio,
+                        height: 348 / devicePixelRatio,
                         placeholder: (context, url) => defBoxShim(
                           width: 140,
                           height: isFocused ? 210 : 190,
@@ -68,23 +72,6 @@ class MovieCard extends StatelessWidget {
                         ),
                       ),
                     ),
-
-              // Gradient overlay for text visibility
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: 100,
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Colors.transparent, Colors.black.withAlpha(200)],
-                    ),
-                  ),
-                ),
-              ),
 
               // Movie info
               Positioned(
@@ -99,24 +86,11 @@ class MovieCard extends StatelessWidget {
                       movie.originalTitle,
                       style: const TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                        fontSize: 11,
                       ),
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    movie.title != movie.originalTitle
-                        ? Text(
-                            movie.title,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w400,
-                              fontSize: 12,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          )
-                        : SizedBox(),
                     const SizedBox(height: 2),
 
                     Row(
@@ -148,23 +122,23 @@ class MovieCard extends StatelessWidget {
                 ),
               ),
 
-              // Focus indicator
-              if (isFocused)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  top: 0,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: const Color(0xFF6A1B9A),
-                        width: 3,
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
+              // // Focus indicator
+              // if (isFocused)
+              //   Positioned(
+              //     left: 0,
+              //     right: 0,
+              //     bottom: 0,
+              //     top: 0,
+              //     child: Container(
+              //       decoration: BoxDecoration(
+              //         border: Border.all(
+              //           color: const Color(0xFF6A1B9A),
+              //           width: 3,
+              //         ),
+              //         borderRadius: BorderRadius.circular(10),
+              //       ),
+              //     ),
+              //   ),
             ],
           ),
         ),

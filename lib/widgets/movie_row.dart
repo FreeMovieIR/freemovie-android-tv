@@ -147,6 +147,8 @@ class _MovieRowState extends State<MovieRow> {
 
   @override
   Widget build(BuildContext context) {
+    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -162,7 +164,7 @@ class _MovieRowState extends State<MovieRow> {
           ),
         ),
         SizedBox(
-          height: 220,
+          height: 434 / devicePixelRatio,
           child: KeyboardListener(
             focusNode: _rowFocusNode,
             onKeyEvent: _handleKeyEvent,

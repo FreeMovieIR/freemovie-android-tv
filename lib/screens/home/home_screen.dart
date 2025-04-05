@@ -168,6 +168,7 @@ class _HomeViewState extends State<_HomeView> {
         children: [
           Text('خطا: ${homeState.errorMessage ?? "خطای ناشناخته!"}'),
           TextButton(
+              autofocus: true,
               onPressed: () {
                 BlocProvider.of<HomeBloc>(context).add(HomeLoadData());
               },
@@ -245,11 +246,10 @@ class _HomeViewState extends State<_HomeView> {
                           width: 3,
                           margin: EdgeInsets.all(8),
                           decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white60)),
-                      Flexible(
-                        child: Text(
-                            ' این وب‌سایت فقط اطلاعات فیلم و سریال را نمایش می‌دهد و هیچ محتوایی را میزبانی نمی‌کند. اطلاعات از APIهای عمومی و لینک‌های دانلود از الماس مووی دریافت می‌شود.',
-                            style: TextStyle(fontSize: 11)),
-                      ),
+                      Text(
+                          ' این وب‌سایت فقط اطلاعات فیلم و سریال را نمایش می‌دهد و هیچ محتوایی را میزبانی نمی‌کند. اطلاعات از APIهای عمومی و لینک‌های دانلود از الماس مووی دریافت می‌شود',
+                          style: TextStyle(fontSize: 11)),
+                      Spacer(),
                       TextButton(
                           onPressed: () {},
                           child: Row(
