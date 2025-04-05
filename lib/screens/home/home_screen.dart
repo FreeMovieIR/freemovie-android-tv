@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:freemovie_android_tv/gen/assets.gen.dart';
 
 import '../../data/model/movie.dart';
 import '../../data/model/tv_show.dart';
 import '../../data/repo/home_repo.dart';
+import '../../gen/assets.gen.dart';
 import '../../widgets/movie_row.dart';
 import '../../widgets/tv_show_row.dart';
+import '../settings/settings_screen.dart';
 import 'bloc/home_bloc.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -265,34 +266,48 @@ class _HomeViewState extends State<_HomeView> {
     required FocusNode focusNode,
     required int index,
   }) {
-    return Focus(
-      focusNode: focusNode,
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          color: isSelected ? Colors.white.withAlpha(20) : Colors.transparent,
-          border: isSelected ? Border.all(color: const Color(0xFF6A1B9A), width: 2) : null,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? const Color(0xFF6A1B9A) : Colors.white,
-              size: 24,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? const Color(0xFF6A1B9A) : Colors.white,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: InkWell(
+        onTap: () {
+          // Handle navigation based on index
+          if (index == 0) {
+            // Navigate to settings
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (context) => const SettingsScreen(),
               ),
+            );
+          }
+          // Handle other navigation items...
+        },
+        child: Focus(
+          focusNode: focusNode,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
+              borderRadius: BorderRadius.circular(20),
             ),
-          ],
+            child: Row(
+              children: [
+                Icon(
+                  icon,
+                  color: isSelected ? Colors.white : Colors.white70,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : Colors.white70,
+                    fontSize: 16,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

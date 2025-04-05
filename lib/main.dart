@@ -2,18 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:freemovie_android_tv/data/repo/home_repo.dart';
 
+import 'data/repo/home_repo.dart';
 import 'screens/home/bloc/home_bloc.dart';
 import 'screens/home/home_screen.dart';
+import 'utils/web/http_client.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   // Set preferred orientations for TV
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
+
+  // Initialize API clients and load API keys
+  await initializeApiClients();
+
   runApp(const MyApp());
 }
 
@@ -33,9 +38,7 @@ class MyApp extends StatelessWidget {
           GlobalWidgetsLocalizations.delegate,
           GlobalCupertinoLocalizations.delegate,
         ],
-        supportedLocales: const [
-          Locale('fa', 'IR'), // Persian
-        ],
+        supportedLocales: const [Locale('fa', 'IR')],
         theme: ThemeData(
           scaffoldBackgroundColor: const Color(0xFF0F111D),
           primaryColor: const Color(0xFF4A148C),
