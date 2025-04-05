@@ -16,8 +16,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.19.3" # Updated to latest stable that includes Dart SDK 3.6.2+
-          channel: "stable"
+          channel: "master" # Using the master channel to get the latest Dart SDK
           cache: true
 
       - name: Install dependencies
