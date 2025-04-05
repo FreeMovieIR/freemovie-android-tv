@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:freemovie_android_tv/gen/assets.gen.dart';
-import 'package:freemovie_android_tv/screens/settings/settings_screen.dart';
 
 import '../../data/model/movie.dart';
 import '../../data/model/tv_show.dart';
 import '../../data/repo/home_repo.dart';
+import '../../gen/assets.gen.dart';
 import '../../widgets/movie_row.dart';
 import '../../widgets/tv_show_row.dart';
+import '../settings/settings_screen.dart';
 import 'bloc/home_bloc.dart';
 
 class HomeScreen extends StatelessWidget {

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:freemovie_android_tv/utils/web/http_client.dart';
+
+import '../../utils/web/http_client.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
