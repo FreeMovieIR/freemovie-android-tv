@@ -104,6 +104,7 @@ final class HomeLoading extends HomeState {
 }
 
 final class HomeMoviesLoaded extends HomeState {
+  @override
   final List<MovieModel> trendingMovies;
 
   const HomeMoviesLoaded({
@@ -118,7 +119,9 @@ final class HomeMoviesLoaded extends HomeState {
 }
 
 final class HomeTvShowsLoaded extends HomeState {
+  @override
   final List<MovieModel> trendingMovies;
+  @override
   final List<TvShowModel> trendingTvShows;
   final Map<int, String> moviePosters;
 
@@ -136,7 +139,9 @@ final class HomeTvShowsLoaded extends HomeState {
 }
 
 final class HomeLoaded extends HomeState {
+  @override
   final List<MovieModel> trendingMovies;
+  @override
   final List<TvShowModel> trendingTvShows;
   final Map<int, String> moviePosters;
   final Map<int, String> tvShowPosters;
