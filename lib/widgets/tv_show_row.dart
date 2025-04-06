@@ -132,12 +132,12 @@ class _TvShowRowState extends State<TvShowRow> {
 
   void _scrollToFocusedItem() {
     if (_scrollController.hasClients) {
-      final itemPosition = _focusedIndex * 150.0;
+      final itemPosition = _focusedIndex * 200;
       final screenWidth = MediaQuery.of(context).size.width;
       final scrollOffset = itemPosition - (screenWidth / 2) + 75;
 
       _scrollController.animateTo(
-        scrollOffset.clamp(0.0, _scrollController.position.maxScrollExtent),
+        scrollOffset.clamp(0, _scrollController.position.maxScrollExtent),
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
@@ -150,14 +150,32 @@ class _TvShowRowState extends State<TvShowRow> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(right: 24, bottom: 16, top: 24),
-          child: Text(
-            widget.title,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: widget.isFocused ? Theme.of(context).colorScheme.primary : Colors.white,
-            ),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                widget.title,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: widget.isFocused ? Theme.of(context).colorScheme.primary : Colors.white,
+                ),
+              ),
+              TextButton(
+                  onPressed: () {
+                    // TODO: navigate to tv shows list
+                  },
+                  child: Row(
+                    children: [
+                      Text(
+                        'مشاهده همه',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      Icon(Icons.chevron_right_rounded, size: 20),
+                    ],
+                  ))
+            ],
           ),
         ),
         SizedBox(
