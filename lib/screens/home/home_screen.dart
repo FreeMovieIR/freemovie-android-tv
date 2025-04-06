@@ -246,10 +246,11 @@ class _HomeViewState extends State<_HomeView> {
                           width: 3,
                           margin: EdgeInsets.all(8),
                           decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white60)),
-                      Text(
-                          ' این وب‌سایت فقط اطلاعات فیلم و سریال را نمایش می‌دهد و هیچ محتوایی را میزبانی نمی‌کند. اطلاعات از APIهای عمومی و لینک‌های دانلود از الماس مووی دریافت می‌شود',
-                          style: TextStyle(fontSize: 11)),
-                      Spacer(),
+                      Flexible(
+                        child: Text(
+                            ' این وب‌سایت فقط اطلاعات فیلم و سریال را نمایش می‌دهد و هیچ محتوایی را میزبانی نمی‌کند. اطلاعات از APIهای عمومی و لینک‌های دانلود از الماس مووی دریافت می‌شود',
+                            style: TextStyle(fontSize: 11)),
+                      ),
                       TextButton(
                           onPressed: () {},
                           child: Row(
@@ -355,8 +356,9 @@ class _HomeViewState extends State<_HomeView> {
       focusNode: focusNode,
       child: Container(
         decoration: BoxDecoration(
-          border: isFocused ? Border.all(color: const Color(0xFF6A1B9A), width: 2) : null,
-          borderRadius: BorderRadius.circular(8),
+          border:
+              isFocused ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2) : null,
+          borderRadius: BorderRadius.circular(12),
         ),
         child: child,
       ),

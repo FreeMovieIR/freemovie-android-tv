@@ -156,12 +156,12 @@ class _TvShowRowState extends State<TvShowRow> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: widget.isFocused ? const Color(0xFF6A1B9A) : Colors.white,
+              color: widget.isFocused ? Theme.of(context).colorScheme.primary : Colors.white,
             ),
           ),
         ),
         SizedBox(
-          height: 220,
+          height: 315,
           child: KeyboardListener(
             focusNode: _rowFocusNode,
             onKeyEvent: _handleKeyEvent,

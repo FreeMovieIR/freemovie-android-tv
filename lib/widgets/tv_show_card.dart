@@ -1,8 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:freemovie_android_tv/widgets/shimmers.dart';
 
 import '../data/model/tv_show.dart';
+import 'shimmers.dart';
 
 class TvShowCard extends StatelessWidget {
   final TvShowModel tvShow;
@@ -24,147 +24,99 @@ class TvShowCard extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        margin: EdgeInsets.symmetric(
-          horizontal: 8,
-          vertical: isFocused ? 5 : 16,
-        ),
-        width: 140,
-        height: isFocused ? 210 : 190,
+        margin: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        width: isFocused ? 170 : 160,
+        height: isFocused ? 310 : 300,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: isFocused
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFF6A1B9A).withAlpha(125),
-                    blurRadius: 10,
-                    spreadRadius: 2,
-                  )
-                ]
-              : [],
+          borderRadius: BorderRadius.circular(12),
+          border: isFocused
+              ? Border.all(
+                  color: Theme.of(context).colorScheme.primary,
+                  width: 3,
+                )
+              : null,
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Stack(
-            children: [
-              posterUrl == null
+        child: Column(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: posterUrl == null
                   ? defBoxShim(
-                      width: 140,
-                      height: isFocused ? 210 : 190,
+                      width: _getWidth(),
+                      height: _getHeight(),
                     )
-                  : Positioned.fill(
-                      child: CachedNetworkImage(
-                        imageUrl: posterUrl!,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => defBoxShim(
-                          width: 140,
-                          height: isFocused ? 210 : 190,
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          color: Colors.grey[900],
-                          child: const Center(
-                            child: Icon(Icons.error, size: 30),
-                          ),
+                  : CachedNetworkImage(
+                      imageUrl: posterUrl!,
+                      fit: BoxFit.cover,
+                      width: _getWidth(),
+                      height: _getHeight(),
+                      placeholder: (context, url) => defBoxShim(
+                        width: _getWidth(),
+                        height: _getHeight(),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: Colors.grey[900],
+                        child: const Center(
+                          child: Icon(Icons.error, size: 30),
                         ),
                       ),
                     ),
+            ),
 
-              // Gradient overlay for text visibility
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: 100,
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black..withAlpha(200),
-                      ],
+            // TV show info
+            Padding(
+              padding: isFocused ? EdgeInsets.only(left: 4) : EdgeInsets.zero,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  SizedBox(height: isFocused ? 6 : 8),
+                  // TV show name
+                  Text(
+                    tvShow.originalTitle,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: isFocused ? FontWeight.bold : FontWeight.normal,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ),
 
-              // TV show info
-              Positioned(
-                left: 8,
-                right: 8,
-                bottom: 8,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // TV show name
-                    Text(
-                      tvShow.originalTitle,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
+                  const SizedBox(height: 2),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        tvShow.vote.toStringAsFixed(1),
+                        style: const TextStyle(color: Colors.white70, fontSize: 10),
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-
-                    tvShow.title != tvShow.originalTitle
-                        ? Text(
-                            tvShow.title,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w400,
-                              fontSize: 12,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          )
-                        : SizedBox(),
-
-                    const SizedBox(height: 2),
-
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.star,
-                          color: Colors.amber,
-                          size: 14,
+                      const SizedBox(width: 2),
+                      const Icon(Icons.star, color: Colors.amber, size: 14),
+                      Container(
+                          height: 3,
+                          width: 3,
+                          margin: EdgeInsets.all(8),
+                          decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white60)),
+                      Text(
+                        tvShow.releaseDate.substring(0, 4),
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 10,
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          tvShow.vote.toStringAsFixed(1),
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 10,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              // Focus indicator
-              if (isFocused)
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  top: 0,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: const Color(0xFF6A1B9A),
-                        width: 3,
                       ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
+                    ],
                   ),
-                ),
-            ],
-          ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
+
+  double _getWidth() => isFocused ? 170 : 160;
+
+  double _getHeight() => isFocused ? 250 : 235;
 }

@@ -147,8 +147,6 @@ class _MovieRowState extends State<MovieRow> {
 
   @override
   Widget build(BuildContext context) {
-    final devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -159,12 +157,12 @@ class _MovieRowState extends State<MovieRow> {
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: widget.isFocused ? const Color(0xFF6A1B9A) : Colors.white,
+              color: widget.isFocused ? Theme.of(context).colorScheme.primary : Colors.white,
             ),
           ),
         ),
         SizedBox(
-          height: 434 / devicePixelRatio,
+          height: 315,
           child: KeyboardListener(
             focusNode: _rowFocusNode,
             onKeyEvent: _handleKeyEvent,
