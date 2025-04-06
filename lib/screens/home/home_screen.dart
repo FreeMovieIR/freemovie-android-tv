@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:freemovie_android_tv/widgets/search_field.dart';
 
 import '../../data/model/movie.dart';
 import '../../data/model/tv_show.dart';
@@ -31,10 +32,11 @@ class _HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<_HomeView> {
-  // Focus nodes for navigation items (4 nav items)
-  final List<FocusNode> _navFocusNodes = List.generate(4, (_) => FocusNode());
+  // Focus nodes for navigation items (6 nav items)
+  final List<FocusNode> _navFocusNodes = List.generate(6, (_) => FocusNode());
 
   // Focus nodes for content sections (2 sections: movies, tv shows)
+  // todo: add focus nodes for announcement banner and slider here.
   final List<FocusNode> _sectionFocusNodes = List.generate(2, (_) => FocusNode());
   final ScrollController _scrollController = ScrollController();
 
@@ -159,9 +161,21 @@ class _HomeViewState extends State<_HomeView> {
     }
 
     if (homeState is HomeLoading || homeState is HomeInitial) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator()); //todo: create proper shimmer here
     } else if (homeState is HomeError) {
-      return Center(child: Text('خطا: ${homeState.errorMessage ?? "خطای ناشناخته!"}'));
+      return Center(
+          child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('خطا: ${homeState.errorMessage ?? "خطای ناشناخته!"}'),
+          TextButton(
+              autofocus: true,
+              onPressed: () {
+                BlocProvider.of<HomeBloc>(context).add(HomeLoadData());
+              },
+              child: Text('تلاش مجدد!'))
+        ],
+      ));
     } else {
       if (homeState is HomeLoaded && latestMovies.isEmpty && popularTvShows.isEmpty) {
         return const Center(child: Text('محتوایی برای نمایش وجود ندارد.'));
@@ -170,50 +184,43 @@ class _HomeViewState extends State<_HomeView> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Row
+          /// Header Row
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: Row(
               children: [
+                _buildNavigationItem(context, 'خانه',
+                    isFocused: homeState.focusedNavIndex == 0,
+                    isSelected: true,
+                    focusNode: _navFocusNodes[0],
+                    index: 0),
+                _buildNavigationItem(context, 'نشان‌شده‌ها',
+                    isFocused: homeState.focusedNavIndex == 1,
+                    isSelected: false,
+                    focusNode: _navFocusNodes[1],
+                    index: 1),
+                _buildNavigationItem(context, 'توسعه‌دهندگان',
+                    isFocused: homeState.focusedNavIndex == 2,
+                    isSelected: false,
+                    focusNode: _navFocusNodes[2],
+                    index: 2),
+                _buildNavigationItem(context, 'درباره ما',
+                    isFocused: homeState.focusedNavIndex == 3,
+                    isSelected: false,
+                    focusNode: _navFocusNodes[3],
+                    index: 3),
+                _buildNavigationItem(context, 'تنظیمات',
+                    isFocused: homeState.focusedNavIndex == 4,
+                    isSelected: false,
+                    focusNode: _navFocusNodes[4],
+                    index: 4),
+                Spacer(),
+                SearchField(
+                    isFocused: homeState.focusedNavIndex == 5,
+                    focusNode: _navFocusNodes[5],
+                    index: 5),
+                Spacer(),
                 Assets.images.logo.image(height: 38),
-                SizedBox(width: 12),
-                const Text(
-                  'فیری مووی',
-                  style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
-                ),
-                const Spacer(),
-                _buildNavigationItem(
-                  context,
-                  'تنظیمات',
-                  icon: Icons.settings,
-                  isSelected: homeState.focusedNavIndex == 0,
-                  focusNode: _navFocusNodes[0],
-                  index: 0,
-                ),
-                _buildNavigationItem(
-                  context,
-                  'جستجو',
-                  icon: Icons.search,
-                  isSelected: homeState.focusedNavIndex == 1,
-                  focusNode: _navFocusNodes[1],
-                  index: 1,
-                ),
-                _buildNavigationItem(
-                  context,
-                  'نشان‌شده‌ها',
-                  icon: Icons.bookmark,
-                  isSelected: homeState.focusedNavIndex == 2,
-                  focusNode: _navFocusNodes[2],
-                  index: 2,
-                ),
-                _buildNavigationItem(
-                  context,
-                  'خانه',
-                  icon: Icons.home,
-                  isSelected: homeState.focusedNavIndex == 3,
-                  focusNode: _navFocusNodes[3],
-                  index: 3,
-                ),
               ],
             ),
           ),
@@ -223,7 +230,10 @@ class _HomeViewState extends State<_HomeView> {
               controller: _scrollController,
               padding: const EdgeInsets.symmetric(vertical: 16),
               children: [
-                // Latest Movies Section
+                /// Announcement banner
+                AnnouncementBanner(),
+
+                /// Latest Movies Section
                 if (latestMovies.isNotEmpty)
                   _buildContentSection(
                     context,
@@ -236,7 +246,8 @@ class _HomeViewState extends State<_HomeView> {
                       isFocused: homeState.focusedSectionIndex == 0,
                     ),
                   ),
-                // Popular TV Shows Section
+
+                /// Popular TV Shows Section
                 if (popularTvShows.isNotEmpty &&
                     (homeState is HomeTvShowsLoaded || homeState is HomeLoaded))
                   _buildContentSection(
@@ -261,51 +272,42 @@ class _HomeViewState extends State<_HomeView> {
   Widget _buildNavigationItem(
     BuildContext context,
     String title, {
-    required IconData icon,
+    required bool isFocused,
     required bool isSelected,
     required FocusNode focusNode,
     required int index,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: InkWell(
-        onTap: () {
-          // Handle navigation based on index
-          if (index == 0) {
-            // Navigate to settings
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => const SettingsScreen(),
-              ),
-            );
-          }
-          // Handle other navigation items...
-        },
-        child: Focus(
-          focusNode: focusNode,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
-              borderRadius: BorderRadius.circular(20),
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: () {
+        // Handle navigation based on index
+        // todo: move to bloc
+        if (index == 4) {
+          // Navigate to settings
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => const SettingsScreen(),
             ),
-            child: Row(
-              children: [
-                Icon(
-                  icon,
-                  color: isSelected ? Colors.white : Colors.white70,
-                  size: 20,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: isSelected ? Colors.white : Colors.white70,
-                    fontSize: 16,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  ),
-                ),
-              ],
+          );
+        }
+      },
+      child: Focus(
+        focusNode: focusNode,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
+            border: Border.all(
+                width: 1,
+                color: isFocused ? Theme.of(context).colorScheme.primary : Colors.transparent),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            title,
+            style: TextStyle(
+              color: isSelected ? Colors.black : Colors.white,
+              fontSize: 10,
+              fontWeight: isFocused || isSelected ? FontWeight.bold : FontWeight.normal,
             ),
           ),
         ),
@@ -323,10 +325,70 @@ class _HomeViewState extends State<_HomeView> {
       focusNode: focusNode,
       child: Container(
         decoration: BoxDecoration(
-          border: isFocused ? Border.all(color: const Color(0xFF6A1B9A), width: 2) : null,
-          borderRadius: BorderRadius.circular(8),
+          border:
+              isFocused ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2) : null,
+          borderRadius: BorderRadius.circular(12),
         ),
         child: child,
+      ),
+    );
+  }
+}
+
+class AnnouncementBanner extends StatelessWidget {
+  const AnnouncementBanner({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      margin: EdgeInsets.symmetric(vertical: 16, horizontal: 72),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.all(Radius.circular(8)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Icon
+          Assets.images.icons.infoFill.svg(),
+          SizedBox(width: 12),
+          Text('بیانیه سلب مسئولیت', style: TextStyle(fontSize: 12)),
+          Container(
+            height: 3,
+            width: 3,
+            margin: EdgeInsets.all(8),
+            decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white60),
+          ),
+          // Title and text
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  ' این وب‌سایت فقط اطلاعات فیلم و سریال را نمایش می‌دهد و هیچ محتوایی را میزبانی نمی‌کند. اطلاعات از APIهای عمومی و لینک‌های دانلود از الماس مووی دریافت می‌شود',
+                  style: TextStyle(fontSize: 11),
+                  softWrap: true,
+                ),
+              ],
+            ),
+          ),
+
+          // Button
+          TextButton(
+            onPressed: () {},
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('اطلاعات بیشتر', style: TextStyle(fontSize: 11)),
+                Icon(Icons.chevron_right)
+              ],
+            ),
+          )
+        ],
       ),
     );
   }
