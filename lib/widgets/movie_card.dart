@@ -25,8 +25,7 @@ class MovieCard extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         margin: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        width: isFocused ? 170 : 160,
-        //TODO: fix this
+        width: _getWidth(),
         height: isFocused ? 310 : 300,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),

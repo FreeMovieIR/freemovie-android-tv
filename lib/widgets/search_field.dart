@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../gen/assets.gen.dart';
 
-class Field extends StatelessWidget {
+class SearchField extends StatelessWidget {
   final bool isFocused;
   final FocusNode focusNode;
   final int index;
 
-  const Field({super.key, required this.isFocused, required this.focusNode, required this.index});
+  const SearchField(
+      {super.key, required this.isFocused, required this.focusNode, required this.index});
 
   @override
   Widget build(BuildContext context) {

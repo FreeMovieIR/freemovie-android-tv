@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:freemovie_android_tv/widgets/field.dart';
+import 'package:freemovie_android_tv/widgets/search_field.dart';
 
 import '../../data/model/movie.dart';
 import '../../data/model/tv_show.dart';
@@ -214,7 +214,7 @@ class _HomeViewState extends State<_HomeView> {
                     focusNode: _navFocusNodes[4],
                     index: 4),
                 Spacer(),
-                Field(
+                SearchField(
                     isFocused: homeState.focusedNavIndex == 5,
                     focusNode: _navFocusNodes[5],
                     index: 5),
