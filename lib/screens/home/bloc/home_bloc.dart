@@ -72,6 +72,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         // Move from nav bar to content (first section)
         currentNavIndex = -1;
         currentSectionIndex = 0;
+        scrollToOffset = 50; // Scroll down to Movies
       } else if (event.logicalKey == LogicalKeyboardKey.select ||
           event.logicalKey == LogicalKeyboardKey.enter) {
         // TODO: Handle select/enter action on nav items
@@ -83,18 +84,19 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         // Move from Movies (0) to TV Shows (1)
         if (currentSectionIndex == 0) {
           currentSectionIndex = 1;
-          scrollToOffset = 300; // Scroll down to TV shows
+          scrollToOffset = 600; // Scroll down to TV shows
         }
       } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
         // Move from TV Shows (1) to Movies (0)
         if (currentSectionIndex == 1) {
           currentSectionIndex = 0;
-          scrollToOffset = 0; // Scroll up to Movies
+          scrollToOffset = 50; // Scroll up to Movies
         }
         // Move from Movies (0) to Nav Bar (Home: 0)
         else if (currentSectionIndex == 0) {
           currentSectionIndex = -1;
           currentNavIndex = 0; // Default to Home nav item
+          scrollToOffset = 0; // Scroll up to navbar
         }
       }
       // TODO: Handle Left/Right arrows within sections (movie/tv show items)

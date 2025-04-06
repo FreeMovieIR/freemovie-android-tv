@@ -36,6 +36,7 @@ class _HomeViewState extends State<_HomeView> {
   final List<FocusNode> _navFocusNodes = List.generate(6, (_) => FocusNode());
 
   // Focus nodes for content sections (2 sections: movies, tv shows)
+  // todo: add focus nodes for announcement banner and slider here.
   final List<FocusNode> _sectionFocusNodes = List.generate(2, (_) => FocusNode());
   final ScrollController _scrollController = ScrollController();
 
@@ -160,7 +161,7 @@ class _HomeViewState extends State<_HomeView> {
     }
 
     if (homeState is HomeLoading || homeState is HomeInitial) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(child: CircularProgressIndicator()); //todo: create proper shimmer here
     } else if (homeState is HomeError) {
       return Center(
           child: Column(
@@ -183,7 +184,7 @@ class _HomeViewState extends State<_HomeView> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header Row
+          /// Header Row
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             child: Row(
@@ -229,6 +230,7 @@ class _HomeViewState extends State<_HomeView> {
               controller: _scrollController,
               padding: const EdgeInsets.symmetric(vertical: 16),
               children: [
+                /// Announcement banner
                 Container(
                   padding: const EdgeInsets.all(16),
                   margin: EdgeInsets.symmetric(vertical: 16, horizontal: 72),
@@ -264,7 +266,7 @@ class _HomeViewState extends State<_HomeView> {
                   ),
                 ),
 
-                // Latest Movies Section
+                /// Latest Movies Section
                 if (latestMovies.isNotEmpty)
                   _buildContentSection(
                     context,
@@ -277,7 +279,8 @@ class _HomeViewState extends State<_HomeView> {
                       isFocused: homeState.focusedSectionIndex == 0,
                     ),
                   ),
-                // Popular TV Shows Section
+
+                /// Popular TV Shows Section
                 if (popularTvShows.isNotEmpty &&
                     (homeState is HomeTvShowsLoaded || homeState is HomeLoaded))
                   _buildContentSection(
@@ -320,7 +323,6 @@ class _HomeViewState extends State<_HomeView> {
             ),
           );
         }
-        // Handle other navigation items...
       },
       child: Focus(
         focusNode: focusNode,
