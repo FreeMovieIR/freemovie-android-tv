@@ -1,8 +1,8 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import 'package:freemovie_android_tv/widgets/shimmers.dart';
 
 import '../data/model/movie.dart';
+import 'shimmers.dart';
 
 class MovieCard extends StatelessWidget {
   final MovieModel movie;

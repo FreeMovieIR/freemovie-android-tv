@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:freemovie_android_tv/widgets/search_field.dart';
 
 import '../../data/model/movie.dart';
 import '../../data/model/tv_show.dart';
 import '../../data/repo/home_repo.dart';
 import '../../gen/assets.gen.dart';
 import '../../widgets/movie_row.dart';
+import '../../widgets/search_field.dart';
 import '../../widgets/tv_show_row.dart';
-import '../settings/settings_screen.dart';
+import 'banner.dart';
 import 'bloc/home_bloc.dart';
+import 'index_and_offset.dart';
+import 'slider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -33,17 +35,31 @@ class _HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<_HomeView> {
   // Focus nodes for navigation items (6 nav items)
-  final List<FocusNode> _navFocusNodes = List.generate(6, (_) => FocusNode());
+  final List<FocusNode> _navFocusNodes = List.generate(navIndexCount, (_) => FocusNode());
 
-  // Focus nodes for content sections (2 sections: movies, tv shows)
-  // todo: add focus nodes for announcement banner and slider here.
-  final List<FocusNode> _sectionFocusNodes = List.generate(2, (_) => FocusNode());
+  // Focus nodes for content sections (banner btn, slider, movies, tv shows)
+  final List<FocusNode> _sectionFocusNodes = List.generate(sectionIndexCount, (_) => FocusNode());
+
+  final FocusNode playButtonFocus = FocusNode();
+  final FocusNode bookmarkButtonFocus = FocusNode();
+  final FocusNode nextSliderButtonFocus = FocusNode();
+  final FocusNode prevSliderButtonFocus = FocusNode();
+
+  final FocusNode movieShowMoreButtonFocus = FocusNode();
+  final FocusNode tvShowShowMoreButtonFocus = FocusNode();
+
   final ScrollController _scrollController = ScrollController();
+
+  // Declare PageController
+  late PageController _pageController;
 
   @override
   void initState() {
     super.initState();
     context.read<HomeBloc>().add(HomeLoadData());
+
+    // Initialize PageController
+    _pageController = PageController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -83,11 +99,13 @@ class _HomeViewState extends State<_HomeView> {
       node.dispose();
     }
     _scrollController.dispose();
+    // Dispose PageController
+    _pageController.dispose();
     super.dispose();
   }
 
   void _handleKeyEvent(KeyEvent event, BuildContext context) {
-    if (event is KeyDownEvent) {
+    if (event is KeyDownEvent || event is KeyUpEvent) {
       context.read<HomeBloc>().add(HomeKeyPressed(event.logicalKey));
     }
   }
@@ -96,7 +114,7 @@ class _HomeViewState extends State<_HomeView> {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
         offset.clamp(0.0, _scrollController.position.maxScrollExtent),
-        duration: const Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 400),
         curve: Curves.easeInOut,
       );
     }
@@ -105,6 +123,13 @@ class _HomeViewState extends State<_HomeView> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<HomeBloc, HomeState>(
+      // Add listenWhen for better performance (optional but recommended)
+      listenWhen: (previous, current) {
+        return previous.scrollToOffset != current.scrollToOffset ||
+            previous.focusedNavIndex != current.focusedNavIndex ||
+            previous.focusedSectionIndex != current.focusedSectionIndex ||
+            previous.sliderIndex != current.sliderIndex;
+      },
       listener: (context, state) {
         // Request focus based on BLoC state
         if (state.focusedNavIndex >= 0) {
@@ -121,6 +146,27 @@ class _HomeViewState extends State<_HomeView> {
         if (state.scrollToOffset != null) {
           _scrollToOffset(state.scrollToOffset!);
         }
+
+        // Animate slider based on BLoC state's sliderIndex
+        if ((state is HomeLoaded ||
+            state is HomeTvShowsLoaded ||
+            state is HomeSlidesLoaded ||
+            state is HomeMoviesLoaded)) {
+          final currentSliderIndex = state.sliderIndex;
+          if (_pageController.hasClients && _pageController.page?.round() != currentSliderIndex) {
+            _pageController.animateToPage(
+              currentSliderIndex,
+              duration: const Duration(milliseconds: 300),
+              curve: Curves.easeInOut,
+            );
+          }
+        }
+      },
+      // Add buildWhen for better performance (optional but recommended)
+      buildWhen: (previous, current) {
+        // Rebuild only when relevant data changes, not just focus/scroll
+        return current is! HomeInitial; // Example: avoid rebuilding on initial
+        // Add more specific conditions based on what _buildBody uses
       },
       builder: (context, homeState) {
         return Scaffold(
@@ -231,19 +277,39 @@ class _HomeViewState extends State<_HomeView> {
               padding: const EdgeInsets.symmetric(vertical: 16),
               children: [
                 /// Announcement banner
-                AnnouncementBanner(),
+                AnnouncementBanner(
+                  focusNode: _sectionFocusNodes.length > 4 ? _sectionFocusNodes[0] : FocusNode(),
+                  isFocused: homeState.focusedSectionIndex == 0,
+                ),
+
+                /// Featured Content Slider
+                const SizedBox(height: 24),
+                ContentSlider(
+                  items: homeState.sliderItems,
+                  focusNode: _sectionFocusNodes.length > 4 ? _sectionFocusNodes[1] : FocusNode(),
+                  isFocused: homeState.focusedSectionIndex == 1,
+                  playBtnFN: playButtonFocus,
+                  bookmarkBtnFN: bookmarkButtonFocus,
+                  nextBtnFN: nextSliderButtonFocus,
+                  prevBtnFN: prevSliderButtonFocus,
+                  slideActionFocusIndex: homeState.focusedSliderActionBtnIndex,
+                  slideNavigationFocusIndex: homeState.focusedSlideNavigationBtnIndex,
+                  currentSliderIndex: homeState.sliderIndex,
+                  pageController: _pageController,
+                ),
+                const SizedBox(height: 24),
 
                 /// Latest Movies Section
                 if (latestMovies.isNotEmpty)
                   _buildContentSection(
                     context,
-                    focusNode: _sectionFocusNodes[0],
-                    isFocused: homeState.focusedSectionIndex == 0,
+                    focusNode: _sectionFocusNodes[2],
+                    isFocused: homeState.focusedSectionIndex == 2,
                     child: MovieRow(
                       title: 'جدیدترین فیلم‌ها',
                       movies: latestMovies,
                       posterPaths: moviePosters,
-                      isFocused: homeState.focusedSectionIndex == 0,
+                      isFocused: homeState.focusedSectionIndex == 2,
                     ),
                   ),
 
@@ -252,13 +318,13 @@ class _HomeViewState extends State<_HomeView> {
                     (homeState is HomeTvShowsLoaded || homeState is HomeLoaded))
                   _buildContentSection(
                     context,
-                    focusNode: _sectionFocusNodes[1],
-                    isFocused: homeState.focusedSectionIndex == 1,
+                    focusNode: _sectionFocusNodes[3],
+                    isFocused: homeState.focusedSectionIndex == 3,
                     child: TvShowRow(
                       title: 'سریال‌های محبوب',
                       tvShows: popularTvShows,
                       posterPaths: tvShowPosters,
-                      isFocused: homeState.focusedSectionIndex == 1,
+                      isFocused: homeState.focusedSectionIndex == 3,
                     ),
                   ),
               ],
@@ -277,38 +343,23 @@ class _HomeViewState extends State<_HomeView> {
     required FocusNode focusNode,
     required int index,
   }) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(20),
-      onTap: () {
-        // Handle navigation based on index
-        // todo: move to bloc
-        if (index == 4) {
-          // Navigate to settings
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const SettingsScreen(),
-            ),
-          );
-        }
-      },
-      child: Focus(
-        focusNode: focusNode,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
-            border: Border.all(
-                width: 1,
-                color: isFocused ? Theme.of(context).colorScheme.primary : Colors.transparent),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            title,
-            style: TextStyle(
-              color: isSelected ? Colors.black : Colors.white,
-              fontSize: 10,
-              fontWeight: isFocused || isSelected ? FontWeight.bold : FontWeight.normal,
-            ),
+    return Focus(
+      focusNode: focusNode,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? Theme.of(context).colorScheme.primary : Colors.transparent,
+          border: Border.all(
+              width: 1,
+              color: isFocused ? Theme.of(context).colorScheme.primary : Colors.transparent),
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          title,
+          style: TextStyle(
+            color: isSelected ? Colors.black : Colors.white,
+            fontSize: 10,
+            fontWeight: isFocused || isSelected ? FontWeight.bold : FontWeight.normal,
           ),
         ),
       ),
@@ -330,65 +381,6 @@ class _HomeViewState extends State<_HomeView> {
           borderRadius: BorderRadius.circular(12),
         ),
         child: child,
-      ),
-    );
-  }
-}
-
-class AnnouncementBanner extends StatelessWidget {
-  const AnnouncementBanner({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      margin: EdgeInsets.symmetric(vertical: 16, horizontal: 72),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.all(Radius.circular(8)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Icon
-          Assets.images.icons.infoFill.svg(),
-          SizedBox(width: 12),
-          Text('بیانیه سلب مسئولیت', style: TextStyle(fontSize: 12)),
-          Container(
-            height: 3,
-            width: 3,
-            margin: EdgeInsets.all(8),
-            decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white60),
-          ),
-          // Title and text
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  ' این وب‌سایت فقط اطلاعات فیلم و سریال را نمایش می‌دهد و هیچ محتوایی را میزبانی نمی‌کند. اطلاعات از APIهای عمومی و لینک‌های دانلود از الماس مووی دریافت می‌شود',
-                  style: TextStyle(fontSize: 11),
-                  softWrap: true,
-                ),
-              ],
-            ),
-          ),
-
-          // Button
-          TextButton(
-            onPressed: () {},
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('اطلاعات بیشتر', style: TextStyle(fontSize: 11)),
-                Icon(Icons.chevron_right)
-              ],
-            ),
-          )
-        ],
       ),
     );
   }

@@ -75,11 +75,17 @@ class $AssetsImagesIconsGen {
   /// File path: assets/images/icons/Info-Fill.svg
   SvgGenImage get infoFill => const SvgGenImage('assets/images/icons/Info-Fill.svg');
 
+  /// File path: assets/images/icons/Left Icon.svg
+  SvgGenImage get leftIcon => const SvgGenImage('assets/images/icons/Left Icon.svg');
+
+  /// File path: assets/images/icons/right_icon.svg
+  SvgGenImage get rightIcon => const SvgGenImage('assets/images/icons/right_icon.svg');
+
   /// File path: assets/images/icons/search_icon.svg
   SvgGenImage get searchIcon => const SvgGenImage('assets/images/icons/search_icon.svg');
 
   /// List of all assets
-  List<SvgGenImage> get values => [infoFill, searchIcon];
+  List<SvgGenImage> get values => [infoFill, leftIcon, rightIcon, searchIcon];
 }
 
 class Assets {

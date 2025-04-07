@@ -41,7 +41,7 @@ class MyApp extends StatelessWidget {
         supportedLocales: const [Locale('fa', 'IR')],
         theme: ThemeData(
           scaffoldBackgroundColor: const Color(0xFF020618),
-          primaryColor: const Color(0xFF4A148C),
+          primaryColor: const Color(0xFFBEDBFF),
           fontFamily: 'Vazir',
           // focusColor: Colors.transparent,
           colorScheme: const ColorScheme.dark(
