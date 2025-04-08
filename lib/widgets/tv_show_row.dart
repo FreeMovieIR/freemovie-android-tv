@@ -7,14 +7,12 @@ import '../data/model/tv_show.dart';
 import 'tv_show_card.dart';
 
 class TvShowRow extends StatefulWidget {
-  final String title;
   final List<TvShowModel> tvShows;
   final bool isFocused;
   final Map<int, String>? posterPaths;
 
   const TvShowRow({
     super.key,
-    required this.title,
     required this.tvShows,
     this.isFocused = false,
     this.posterPaths,
@@ -146,88 +144,54 @@ class _TvShowRowState extends State<TvShowRow> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                widget.title,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: widget.isFocused ? Theme.of(context).colorScheme.primary : Colors.white,
-                ),
-              ),
-              TextButton(
-                  onPressed: () {
-                    // TODO: navigate to tv shows list
-                  },
-                  child: Row(
-                    children: [
-                      Text(
-                        'مشاهده همه',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                      Icon(Icons.chevron_right_rounded, size: 20),
-                    ],
-                  ))
-            ],
-          ),
-        ),
-        SizedBox(
-          height: 315,
-          child: KeyboardListener(
-            focusNode: _rowFocusNode,
-            onKeyEvent: _handleKeyEvent,
-            child: ListView.builder(
-              controller: _scrollController,
-              scrollDirection: Axis.horizontal,
-              itemCount: widget.tvShows.length,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemBuilder: (context, index) {
-                final tvShow = widget.tvShows[index];
-                final String? posterUrl = widget.posterPaths?[tvShow.id];
+    return SizedBox(
+      height: 315,
+      child: KeyboardListener(
+        focusNode: _rowFocusNode,
+        onKeyEvent: _handleKeyEvent,
+        child: ListView.builder(
+          controller: _scrollController,
+          scrollDirection: Axis.horizontal,
+          itemCount: widget.tvShows.length,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemBuilder: (context, index) {
+            final tvShow = widget.tvShows[index];
+            final String? posterUrl = widget.posterPaths?[tvShow.id];
 
-                return Focus(
-                  focusNode: _cardFocusNodes[index],
-                  canRequestFocus: widget.isFocused,
-                  onFocusChange: (hasFocus) {
-                    if (hasFocus && widget.isFocused && !_processingFocusEvent) {
-                      _processingFocusEvent = true;
-                      setState(() {
-                        _focusedIndex = index;
-                      });
-                      _scrollToFocusedItem();
-                      Timer(const Duration(milliseconds: 100), () {
-                        _processingFocusEvent = false;
-                      });
-                    }
-                  },
-                  child: TvShowCard(
-                    tvShow: tvShow,
-                    posterUrl: posterUrl,
-                    isFocused: widget.isFocused && index == _focusedIndex,
-                    onTap: () {
-                      _processingFocusEvent = true;
-                      setState(() {
-                        _focusedIndex = index;
-                      });
-                      _cardFocusNodes[index].requestFocus();
-                      Timer(const Duration(milliseconds: 100), () {
-                        _processingFocusEvent = false;
-                      });
-                    },
-                  ),
-                );
+            return Focus(
+              focusNode: _cardFocusNodes[index],
+              canRequestFocus: widget.isFocused,
+              onFocusChange: (hasFocus) {
+                if (hasFocus && widget.isFocused && !_processingFocusEvent) {
+                  _processingFocusEvent = true;
+                  setState(() {
+                    _focusedIndex = index;
+                  });
+                  _scrollToFocusedItem();
+                  Timer(const Duration(milliseconds: 100), () {
+                    _processingFocusEvent = false;
+                  });
+                }
               },
-            ),
-          ),
+              child: TvShowCard(
+                tvShow: tvShow,
+                posterUrl: posterUrl,
+                isFocused: widget.isFocused && index == _focusedIndex,
+                onTap: () {
+                  _processingFocusEvent = true;
+                  setState(() {
+                    _focusedIndex = index;
+                  });
+                  _cardFocusNodes[index].requestFocus();
+                  Timer(const Duration(milliseconds: 100), () {
+                    _processingFocusEvent = false;
+                  });
+                },
+              ),
+            );
+          },
         ),
-      ],
+      ),
     );
   }
 }

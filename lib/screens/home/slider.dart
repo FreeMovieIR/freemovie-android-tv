@@ -40,7 +40,7 @@ class ContentSlider extends StatelessWidget {
   final int currentSliderIndex;
   final PageController pageController;
 
-  ContentSlider(
+  const ContentSlider(
       {super.key,
       required this.items,
       required this.focusNode,
@@ -265,13 +265,13 @@ class ContentSlider extends StatelessWidget {
                   // Action buttons
                   Row(
                     children: [
-                      InkWell(
-                        borderRadius: BorderRadius.circular(20),
-                        onTap: () {
-                          //TODO
-                        },
-                        child: Focus(
-                          focusNode: playBtnFN,
+                      Focus(
+                        focusNode: playBtnFN,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () {
+                            //TODO
+                          },
                           child: Container(
                             height: 36,
                             width: 120,
@@ -304,13 +304,13 @@ class ContentSlider extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      InkWell(
-                        borderRadius: BorderRadius.circular(20),
-                        onTap: () {
-                          //TODO
-                        },
-                        child: Focus(
-                          focusNode: bookmarkBtnFN,
+                      Focus(
+                        focusNode: bookmarkBtnFN,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () {
+                            //TODO
+                          },
                           child: Container(
                             height: 36,
                             width: 120,
@@ -333,9 +333,10 @@ class ContentSlider extends StatelessWidget {
                                   'نشان کردن',
                                   style: TextStyle(
                                     // fontSize: 10,
-                                    fontWeight: slideActionFocusIndex == playSliderActionBtnIndex
-                                        ? FontWeight.bold
-                                        : FontWeight.normal,
+                                    fontWeight:
+                                        slideActionFocusIndex == bookmarkSliderActionBtnIndex
+                                            ? FontWeight.bold
+                                            : FontWeight.normal,
                                   ),
                                 ),
                               ],

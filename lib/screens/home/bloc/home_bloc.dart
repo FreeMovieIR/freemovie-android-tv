@@ -20,6 +20,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
   bool _processingKeyEvent = false;
   Timer? _keyProcessingTimer;
+  int _stuckCounter = 0;
 
   HomeBloc({required HomeRepository homeRepository})
       : _homeRepository = homeRepository,
@@ -52,277 +53,471 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   }
 
   void _onKeyPressed(HomeKeyPressed event, Emitter<HomeState> emit) {
-    if (_processingKeyEvent) return; // Prevent processing new key events too quickly
+    if (_processingKeyEvent) {
+      _stuckCounter++;
+
+      // Emergency reset if we detect repeated stuck states
+      if (_stuckCounter > 3) {
+        _processingKeyEvent = false;
+        _stuckCounter = 0;
+        debugPrint("Emergency reset of focus processing");
+      }
+      return; // Prevent processing new key events too quickly
+    }
+
     _processingKeyEvent = true;
+    _stuckCounter = 0;
+
+    // Cancel any existing timers to prevent multiple timers
+    _keyProcessingTimer?.cancel();
 
     final currentState = state;
     int currentNavIndex = currentState.focusedNavIndex;
-    int currentSectionIndex = currentState.focusedSectionIndex;
-    double? scrollToOffset;
+    // int currentSectionIndex = currentState.focusedSectionIndex;
 
-    // Logic for NavigationBar Focus (currentNavIndex >= 0)
-    if (currentNavIndex >= 0) {
-      if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-        if (currentNavIndex < 5) {
-          currentNavIndex++;
+    try {
+      // Logic for NavigationBar Focus (currentNavIndex >= 0)
+      if (currentNavIndex >= 0) {
+        if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+          if (currentNavIndex < 5) {
+            currentNavIndex++;
+            emit(state.copyWith(
+              focusedNavIndex: currentNavIndex,
+              focusedSectionIndex: -1,
+            ));
+          }
+        } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+          if (currentNavIndex > 0) {
+            currentNavIndex--;
+            emit(state.copyWith(
+              focusedNavIndex: currentNavIndex,
+              focusedSectionIndex: -1,
+            ));
+          }
+        } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+          // Move from nav bar to content (first section)
+          currentNavIndex = -1;
           emit(state.copyWith(
             focusedNavIndex: currentNavIndex,
-            focusedSectionIndex: -1,
-          ));
-        }
-      } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-        if (currentNavIndex > 0) {
-          currentNavIndex--;
-          emit(state.copyWith(
-            focusedNavIndex: currentNavIndex,
-            focusedSectionIndex: -1,
-          ));
-        }
-      } else if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-        // Move from nav bar to content (first section)
-        currentNavIndex = -1;
-        currentSectionIndex = announcementSectionIndex;
-        emit(state.copyWith(
-          focusedNavIndex: currentNavIndex,
-          focusedSectionIndex: currentSectionIndex,
-          scrollToOffset: announcementSectionOffset,
-          isAnnouncementBtnFocused: true,
-        ));
-      } else if (event.logicalKey == LogicalKeyboardKey.select ||
-          event.logicalKey == LogicalKeyboardKey.enter) {
-        // TODO: Handle select/enter action on nav items
-      }
-    }
-    // Logic for Content Section Focus (currentSectionIndex >= 0)
-    else if (currentSectionIndex >= 0) {
-      // 0 > Announcement Banner
-      // 1 > Slider
-      // 2 > Movies
-      // 3 > Tv Shows
-      if (currentSectionIndex == announcementSectionIndex) {
-        if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-          emit(state.copyWith(
-            focusedSectionIndex: sliderSectionIndex,
-            focusedSliderActionBtnIndex: playSliderActionBtnIndex,
-            focusedSlideNavigationBtnIndex: notSelectedIndex,
-            scrollToOffset: sliderSectionOffset,
-            // Scroll down to Slider
-            isAnnouncementBtnFocused: false,
-          ));
-        } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-          emit(state.copyWith(
-            focusedSectionIndex: notSelectedIndex,
-            focusedNavIndex: homeNavIndex, // Default to Home nav item
+            focusedSectionIndex: announcementSectionIndex,
             scrollToOffset: announcementSectionOffset,
-            isAnnouncementBtnFocused: false,
+            isAnnouncementBtnFocused: true,
           ));
-        } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-        } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {}
-      } else if (currentSectionIndex == sliderSectionIndex) {
-        /// Play Btn
-        if (state.focusedSliderActionBtnIndex == playSliderActionBtnIndex) {
-          if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-            emit(state.copyWith(
-              focusedSlideNavigationBtnIndex: sliderNextNavigationBtnIndex,
-              focusedSliderActionBtnIndex: notSelectedIndex,
-            ));
-          } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-            emit(state.copyWith(
-              focusedSlideNavigationBtnIndex: notSelectedIndex,
-              focusedSliderActionBtnIndex: notSelectedIndex,
-              scrollToOffset: announcementSectionOffset,
-              focusedSectionIndex: announcementSectionIndex,
-              isAnnouncementBtnFocused: true,
-            ));
-          } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-            emit(state.copyWith(
-              focusedSliderActionBtnIndex: bookmarkNavIndex,
-              scrollToOffset: sliderSectionOffset,
-            ));
-          } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {}
+        } else if (event.logicalKey == LogicalKeyboardKey.select ||
+            event.logicalKey == LogicalKeyboardKey.enter) {
+          // TODO: Handle select/enter action on nav items
         }
-        // Bookmark Btn
-        else if (state.focusedSliderActionBtnIndex == bookmarkSliderActionBtnIndex) {
+      }
+      // Logic for Content Section Focus (focusedSectionIndex >= 0)
+      else if (state.focusedSectionIndex >= 0) {
+        // 0 > Announcement Banner
+        // 1 > Slider
+        // 2 > Movies
+        // 3 > Tv Shows
+
+        /// Announcement Banner
+        if (state.focusedSectionIndex == announcementSectionIndex) {
+          // Scroll down to Slider
           if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
             emit(state.copyWith(
-              focusedSlideNavigationBtnIndex: sliderNextNavigationBtnIndex,
-              focusedSliderActionBtnIndex: notSelectedIndex,
-            ));
-          } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-            emit(state.copyWith(
-              focusedSlideNavigationBtnIndex: notSelectedIndex,
-              focusedSliderActionBtnIndex: notSelectedIndex,
-              scrollToOffset: announcementSectionOffset,
-              focusedSectionIndex: announcementSectionIndex,
-              isAnnouncementBtnFocused: true,
-            ));
-          } else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-          } else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-            emit(state.copyWith(
+              focusedSectionIndex: sliderSectionIndex,
               focusedSliderActionBtnIndex: playSliderActionBtnIndex,
-              scrollToOffset: sliderSectionOffset,
-            ));
-          }
-        }
-        // Next Slide Btn
-        else if (state.focusedSlideNavigationBtnIndex == sliderNextNavigationBtnIndex) {
-          // go to movie row section
-          if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-            emit(state.copyWith(
               focusedSlideNavigationBtnIndex: notSelectedIndex,
-              focusedSliderActionBtnIndex: notSelectedIndex,
-              scrollToOffset: movieSectionOffset,
-              focusedSectionIndex: moviesSectionIndex,
+              scrollToOffset: sliderSectionOffset,
+              isAnnouncementBtnFocused: false,
             ));
           }
-          // go back to slider action btns
+          // Go back to Nav bar
           else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
             emit(state.copyWith(
-              focusedSlideNavigationBtnIndex: notSelectedIndex,
-              focusedSliderActionBtnIndex: playSliderActionBtnIndex,
+              focusedSectionIndex: notSelectedIndex,
+              focusedNavIndex: homeNavIndex, // Default to Home nav item
+              scrollToOffset: announcementSectionOffset,
+              isAnnouncementBtnFocused: false,
             ));
           }
-          // do nothing
+          // Do nothing
           else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
           }
-          // navigate to prev slide btn
-          else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-            emit(state.copyWith(
-              focusedSliderActionBtnIndex: notSelectedIndex,
-              scrollToOffset: sliderSectionOffset,
-              focusedSlideNavigationBtnIndex: sliderPrevNavigationBtnIndex,
-            ));
-          }
-          // confirm btn /  move slider to next item (Increment)
-          else if (event.logicalKey == LogicalKeyboardKey.select ||
-              event.logicalKey == LogicalKeyboardKey.enter ||
-              event.logicalKey == LogicalKeyboardKey.space) {
-            // Increment sliderIndex if not at the end
-            if (state.sliderIndex < state.sliderItems.length - 1) {
-              // Check boundary
+          // Do nothing
+          else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {}
+        }
+
+        /// Slider
+        else if (state.focusedSectionIndex == sliderSectionIndex) {
+          // Play Btn
+          if (state.focusedSliderActionBtnIndex == playSliderActionBtnIndex) {
+            // Go to Slide Navigation Btns
+            if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
               emit(state.copyWith(
-                focusedSlideNavigationBtnIndex: sliderNextNavigationBtnIndex, // Keep focus
-                sliderIndex: state.sliderIndex + 1, // INCREMENT
+                focusedSectionIndex: sliderSectionIndex,
+                focusedNavIndex: notSelectedIndex,
+                focusedSlideNavigationBtnIndex: sliderNextNavigationBtnIndex,
+                focusedSliderActionBtnIndex: notSelectedIndex,
+                isAnnouncementBtnFocused: false,
+                isTvShowItemsFocused: false,
+                isMovieItemsFocused: false,
+                isShowMoreMoviesFocused: false,
+                isShowMoreTvShowsFocused: false,
+                scrollToOffset: sliderSectionOffset,
+              ));
+            }
+            // Go Back to Announcement Section
+            else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+              emit(state.copyWith(
+                focusedSlideNavigationBtnIndex: notSelectedIndex,
+                focusedSliderActionBtnIndex: notSelectedIndex,
+                scrollToOffset: announcementSectionOffset,
+                focusedSectionIndex: announcementSectionIndex,
+                isAnnouncementBtnFocused: true,
+              ));
+            }
+            // Select Bookmark Btn
+            else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+              emit(state.copyWith(
+                focusedSliderActionBtnIndex: bookmarkSliderActionBtnIndex,
+                scrollToOffset: sliderSectionOffset,
+              ));
+            }
+            // Do nothing
+            else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {}
+          }
+          // Bookmark Btn
+          else if (state.focusedSliderActionBtnIndex == bookmarkSliderActionBtnIndex) {
+            // Go to Slide Navigation Btns
+            if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+              emit(state.copyWith(
+                focusedSlideNavigationBtnIndex: sliderNextNavigationBtnIndex,
+                focusedSliderActionBtnIndex: notSelectedIndex,
+              ));
+            }
+            // Go Back to Announcement Section
+            else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+              emit(state.copyWith(
+                focusedSlideNavigationBtnIndex: notSelectedIndex,
+                focusedSliderActionBtnIndex: notSelectedIndex,
+                scrollToOffset: announcementSectionOffset,
+                focusedSectionIndex: announcementSectionIndex,
+                isAnnouncementBtnFocused: true,
+              ));
+            }
+            // Do nothing
+            else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+            }
+            // Select Play Btn
+            else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+              emit(state.copyWith(
+                focusedSliderActionBtnIndex: playSliderActionBtnIndex,
+                scrollToOffset: sliderSectionOffset,
               ));
             }
           }
-        }
-        // Prev Slide Btn
-        else if (state.focusedSlideNavigationBtnIndex == sliderPrevNavigationBtnIndex) {
-          // go to movie row section
-          if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-            emit(state.copyWith(
-              focusedSlideNavigationBtnIndex: notSelectedIndex,
-              focusedSliderActionBtnIndex: notSelectedIndex,
-              scrollToOffset: movieSectionOffset,
-              focusedSectionIndex: moviesSectionIndex,
-            ));
-          }
-          // go back to slider action btns
-          else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-            emit(state.copyWith(
-              focusedSlideNavigationBtnIndex: notSelectedIndex,
-              focusedSliderActionBtnIndex: playSliderActionBtnIndex,
-            ));
-          }
-          // navigate to next slide btn
-          else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-            emit(state.copyWith(
-              focusedSliderActionBtnIndex: notSelectedIndex,
-              scrollToOffset: sliderSectionOffset,
-              focusedSlideNavigationBtnIndex: sliderNextNavigationBtnIndex,
-            ));
-          }
-          // do nothing
-          else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-          }
-          // confirm btn /  move slider to prev item (Decrement)
-          else if (event.logicalKey == LogicalKeyboardKey.select ||
-              event.logicalKey == LogicalKeyboardKey.enter ||
-              event.logicalKey == LogicalKeyboardKey.space) {
-            // Decrement sliderIndex if not at the beginning
-            if (state.sliderIndex > 0) {
-              // Check boundary
+          // Next Slide Btn
+          else if (state.focusedSlideNavigationBtnIndex == sliderNextNavigationBtnIndex) {
+            // go to movie row section
+            if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
               emit(state.copyWith(
-                focusedSlideNavigationBtnIndex: sliderPrevNavigationBtnIndex, // Keep focus
-                sliderIndex: state.sliderIndex - 1, // DECREMENT
+                focusedSlideNavigationBtnIndex: notSelectedIndex,
+                focusedSliderActionBtnIndex: notSelectedIndex,
+                scrollToOffset: movieSectionOffset,
+                focusedSectionIndex: moviesSectionIndex,
+                isShowMoreMoviesFocused: true,
+                isShowMoreTvShowsFocused: false,
+                isMovieItemsFocused: false,
+                isTvShowItemsFocused: false,
               ));
+            }
+            // go back to slider action btns
+            else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+              emit(state.copyWith(
+                focusedSlideNavigationBtnIndex: notSelectedIndex,
+                focusedSliderActionBtnIndex: playSliderActionBtnIndex,
+                focusedSectionIndex: sliderSectionIndex,
+                focusedNavIndex: notSelectedIndex,
+                isAnnouncementBtnFocused: false,
+                isTvShowItemsFocused: false,
+                isMovieItemsFocused: false,
+                isShowMoreMoviesFocused: false,
+                isShowMoreTvShowsFocused: false,
+                scrollToOffset: sliderSectionOffset,
+              ));
+
+              // Force immediate reset of processing flag to prevent getting stuck
+              _keyProcessingTimer?.cancel();
+              _keyProcessingTimer = Timer(const Duration(milliseconds: 10), () {
+                _processingKeyEvent = false;
+                debugPrint("Forced immediate key processing reset");
+              });
+            }
+            // do nothing
+            else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+            }
+            // navigate to prev slide btn
+            else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+              emit(state.copyWith(
+                focusedSliderActionBtnIndex: notSelectedIndex,
+                scrollToOffset: sliderSectionOffset,
+                focusedSlideNavigationBtnIndex: sliderPrevNavigationBtnIndex,
+              ));
+            }
+            // confirm btn /  move slider to next item (Increment)
+            else if (event.logicalKey == LogicalKeyboardKey.select ||
+                event.logicalKey == LogicalKeyboardKey.enter ||
+                event.logicalKey == LogicalKeyboardKey.space) {
+              // Increment sliderIndex if not at the end
+              if (state.sliderIndex < state.sliderItems.length - 1) {
+                // Check boundary
+                emit(state.copyWith(
+                  focusedSlideNavigationBtnIndex: sliderNextNavigationBtnIndex, // Keep focus
+                  sliderIndex: state.sliderIndex + 1, // INCREMENT
+                ));
+              }
+            }
+          }
+          // Prev Slide Btn
+          else if (state.focusedSlideNavigationBtnIndex == sliderPrevNavigationBtnIndex) {
+            // Select Show More Movies Btn
+            if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+              emit(state.copyWith(
+                focusedSlideNavigationBtnIndex: notSelectedIndex,
+                focusedSliderActionBtnIndex: notSelectedIndex,
+                scrollToOffset: movieSectionOffset,
+                focusedSectionIndex: moviesSectionIndex,
+                isShowMoreMoviesFocused: true,
+                isShowMoreTvShowsFocused: false,
+                isMovieItemsFocused: false,
+                isTvShowItemsFocused: false,
+              ));
+            }
+            // go back to slider action btns
+            else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+              emit(state.copyWith(
+                focusedSlideNavigationBtnIndex: notSelectedIndex,
+                focusedSliderActionBtnIndex: playSliderActionBtnIndex,
+                focusedSectionIndex: sliderSectionIndex,
+                focusedNavIndex: notSelectedIndex,
+                isAnnouncementBtnFocused: false,
+                isTvShowItemsFocused: false,
+                isMovieItemsFocused: false,
+                isShowMoreMoviesFocused: false,
+                isShowMoreTvShowsFocused: false,
+                scrollToOffset: sliderSectionOffset,
+              ));
+
+              // Force immediate reset of processing flag to prevent getting stuck
+              _keyProcessingTimer?.cancel();
+              _keyProcessingTimer = Timer(const Duration(milliseconds: 10), () {
+                _processingKeyEvent = false;
+                debugPrint("Forced immediate key processing reset");
+              });
+            }
+            // navigate to next slide btn
+            else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+              emit(state.copyWith(
+                focusedSliderActionBtnIndex: notSelectedIndex,
+                scrollToOffset: sliderSectionOffset,
+                focusedSlideNavigationBtnIndex: sliderNextNavigationBtnIndex,
+              ));
+            }
+            // do nothing
+            else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+            }
+            // confirm btn /  move slider to prev item (Decrement)
+            else if (event.logicalKey == LogicalKeyboardKey.select ||
+                event.logicalKey == LogicalKeyboardKey.enter ||
+                event.logicalKey == LogicalKeyboardKey.space) {
+              // Decrement sliderIndex if not at the beginning
+              if (state.sliderIndex > 0) {
+                // Check boundary
+                emit(state.copyWith(
+                  focusedSlideNavigationBtnIndex: sliderPrevNavigationBtnIndex, // Keep focus
+                  sliderIndex: state.sliderIndex - 1, // DECREMENT
+                ));
+              }
+            }
+          }
+        }
+
+        /// Movies
+        else if (state.focusedSectionIndex == moviesSectionIndex) {
+          // Show More Movies Btn
+          if (state.isShowMoreMoviesFocused) {
+            // Select Movie Items
+            if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+              emit(state.copyWith(
+                scrollToOffset: movieSectionOffset,
+                focusedSectionIndex: moviesSectionIndex,
+                isShowMoreMoviesFocused: false,
+                isShowMoreTvShowsFocused: false,
+                isMovieItemsFocused: true,
+                isTvShowItemsFocused: false,
+              ));
+            }
+            // Go Back To Slider Navigation Btns
+            else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+              emit(state.copyWith(
+                focusedSlideNavigationBtnIndex: sliderNextNavigationBtnIndex,
+                focusedSliderActionBtnIndex: notSelectedIndex,
+                scrollToOffset: sliderSectionOffset,
+                focusedSectionIndex: sliderSectionIndex,
+                focusedNavIndex: notSelectedIndex,
+                isAnnouncementBtnFocused: false,
+                isShowMoreMoviesFocused: false,
+                isShowMoreTvShowsFocused: false,
+                isMovieItemsFocused: false,
+                isTvShowItemsFocused: false,
+              ));
+
+              // Force immediate reset of processing flag to prevent getting stuck
+              _keyProcessingTimer?.cancel();
+              _keyProcessingTimer = Timer(const Duration(milliseconds: 10), () {
+                _processingKeyEvent = false;
+                debugPrint("Forced immediate key processing reset");
+              });
+            }
+            // Do nothing
+            else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+            }
+            // Do nothing
+            else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+            }
+            // Confirm Btn / Select Show more btn
+            else if (event.logicalKey == LogicalKeyboardKey.select ||
+                event.logicalKey == LogicalKeyboardKey.enter ||
+                event.logicalKey == LogicalKeyboardKey.space) {
+              // TODO: Handle show more action
+            }
+          }
+          // Movie Items
+          else if (state.isMovieItemsFocused) {
+            // Select Show More Tv Shows Btn
+            if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+              emit(state.copyWith(
+                scrollToOffset: tvShowSectionOffset,
+                focusedSectionIndex: tvShowsSectionIndex,
+                isShowMoreMoviesFocused: false,
+                isShowMoreTvShowsFocused: true,
+                isMovieItemsFocused: false,
+                isTvShowItemsFocused: false,
+              ));
+            }
+            // Go Back To Movie Show More Btn
+            else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+              emit(state.copyWith(
+                scrollToOffset: movieSectionOffset,
+                focusedSectionIndex: moviesSectionIndex,
+                isShowMoreMoviesFocused: true,
+                isShowMoreTvShowsFocused: false,
+                isMovieItemsFocused: false,
+                isTvShowItemsFocused: false,
+              ));
+            }
+            // Do nothing
+            else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+            }
+            // Do nothing
+            else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+            }
+            // Confirm Btn / Select Show more btn
+            else if (event.logicalKey == LogicalKeyboardKey.select ||
+                event.logicalKey == LogicalKeyboardKey.enter ||
+                event.logicalKey == LogicalKeyboardKey.space) {
+              // TODO: Handle movie item selection
+            }
+          }
+        }
+
+        /// Tv Shows
+        else if (state.focusedSectionIndex == tvShowsSectionIndex) {
+          // Show More Btn
+          if (state.isShowMoreTvShowsFocused) {
+            // Select Tv Show Items
+            if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+              emit(state.copyWith(
+                scrollToOffset: tvShowSectionOffset,
+                focusedSectionIndex: tvShowsSectionIndex,
+                isShowMoreMoviesFocused: false,
+                isShowMoreTvShowsFocused: false,
+                isMovieItemsFocused: false,
+                isTvShowItemsFocused: true,
+              ));
+            }
+            // Go Back Movie Items
+            else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+              emit(state.copyWith(
+                scrollToOffset: movieSectionOffset,
+                focusedSectionIndex: moviesSectionIndex,
+                isShowMoreMoviesFocused: false,
+                isShowMoreTvShowsFocused: false,
+                isMovieItemsFocused: true,
+                isTvShowItemsFocused: false,
+              ));
+            }
+            // Do nothing
+            else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+            }
+            // Do nothing
+            else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+            }
+            // Confirm Btn / Select Show more btn
+            else if (event.logicalKey == LogicalKeyboardKey.select ||
+                event.logicalKey == LogicalKeyboardKey.enter ||
+                event.logicalKey == LogicalKeyboardKey.space) {
+              // TODO: Handle show more action
+            }
+          }
+          // Tv Show Items
+          else if (state.isTvShowItemsFocused) {
+            // Do nothing
+            if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
+            }
+            // Go Back To TvShow Show More Btn
+            else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
+              emit(state.copyWith(
+                scrollToOffset: tvShowSectionOffset,
+                focusedSectionIndex: tvShowsSectionIndex,
+                isShowMoreMoviesFocused: false,
+                isShowMoreTvShowsFocused: true,
+                isMovieItemsFocused: false,
+                isTvShowItemsFocused: false,
+              ));
+            }
+            // Do nothing
+            else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+            }
+            // Do nothing
+            else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+            }
+            // Confirm Btn / Select Show more btn
+            else if (event.logicalKey == LogicalKeyboardKey.select ||
+                event.logicalKey == LogicalKeyboardKey.enter ||
+                event.logicalKey == LogicalKeyboardKey.space) {
+              // TODO: Handle tv show item selection
             }
           }
         }
       }
+    } finally {
+      // Reset the processing flag after a short delay - this is critical to prevent getting stuck
+      _keyProcessingTimer = Timer(const Duration(milliseconds: 150), () {
+        _processingKeyEvent = false;
+        debugPrint("Key processing reset");
+      });
     }
-    //   if (event.logicalKey == LogicalKeyboardKey.arrowDown) {
-    //     // Move from Announcement Banner (0) to Slider (1)
-    //     if (currentSectionIndex == announcementSectionIndex) {
-    //       currentSectionIndex = sliderSectionIndex;
-    //       scrollToOffset = sliderSectionOffset; // Scroll down to Slider
-    //     }
-    //     // Move from Slider (1) to Movies (2)
-    //     else if (currentSectionIndex == sliderSectionIndex) {
-    //       currentSectionIndex = moviesSectionIndex;
-    //       scrollToOffset = movieSectionOffset; // Scroll down to Movies
-    //     }
-    //     // Move from Movies (2) to Tv Shows (3)
-    //     else if (currentSectionIndex == moviesSectionIndex) {
-    //       currentSectionIndex = tvShowsSectionIndex;
-    //       scrollToOffset = tvShowSectionOffset; // Scroll down to Tv Shows
-    //     }
-    //   } else if (event.logicalKey == LogicalKeyboardKey.arrowUp) {
-    //     // Move from TV Shows (3) to Movies (2)
-    //     if (currentSectionIndex == tvShowsSectionIndex) {
-    //       currentSectionIndex = moviesSectionIndex;
-    //       scrollToOffset = movieSectionOffset; // Scroll up to Movies
-    //     }
-    //     // Move from Movies (2) to Slider (1)
-    //     else if (currentSectionIndex == moviesSectionIndex) {
-    //       currentSectionIndex = sliderSectionIndex;
-    //       scrollToOffset = sliderSectionOffset; // Scroll up to Slider
-    //     }
-    //     // Move from Slider (1) to Announcement Banner (0)
-    //     else if (currentSectionIndex == sliderSectionIndex) {
-    //       currentSectionIndex = announcementSectionIndex;
-    //       scrollToOffset = announcementSectionOffset; // Scroll up to Announcement Banner
-    //     }
-    //     // Move from Announcement Banner (0) to Nav Bar (Home: 0)
-    //     else if (currentSectionIndex == announcementSectionIndex) {
-    //       currentSectionIndex = -1;
-    //       currentNavIndex = homeNavIndex; // Default to Home nav item
-    //       scrollToOffset = 0; // Scroll up to navbar
-    //     }
-    //   }
-    //   // TODO: Handle Left/Right arrows within sections (movie/tv show items)
-    //   // TODO: Handle select/enter on movie/tv show items
-    // }
-
-    // // Emit the new state if it changed
-    // if (currentNavIndex != currentState.focusedNavIndex ||
-    //     currentSectionIndex != currentState.focusedSectionIndex ||
-    //     scrollToOffset != currentState.scrollToOffset) {
-    //   emit(state.copyWith(
-    //     focusedNavIndex: currentNavIndex,
-    //     focusedSectionIndex: currentSectionIndex,
-    //     scrollToOffset: scrollToOffset,
-    //     setScrollToNull: scrollToOffset == null,
-    //   ));
-    // }
-
-    // Reset the processing flag after a short delay
-    _keyProcessingTimer?.cancel(); // Cancel any existing timer
-    _keyProcessingTimer = Timer(const Duration(milliseconds: 150), () {
-      _processingKeyEvent = false;
-    });
   }
 
   Future<void> _onLoadData(HomeLoadData event, Emitter<HomeState> emit) async {
     emit(HomeLoading(
-      focusedSectionIndex: state.focusedSectionIndex,
-      focusedNavIndex: state.focusedNavIndex,
-      scrollToOffset: state.scrollToOffset,
-      isAnnouncementBtnFocused: state.isAnnouncementBtnFocused,
-      focusedSlideNavigationBtnIndex: state.focusedSlideNavigationBtnIndex,
-      focusedSliderActionBtnIndex: state.focusedSliderActionBtnIndex,
-    ));
+        focusedSectionIndex: state.focusedSectionIndex,
+        focusedNavIndex: state.focusedNavIndex,
+        scrollToOffset: state.scrollToOffset,
+        isAnnouncementBtnFocused: state.isAnnouncementBtnFocused,
+        focusedSlideNavigationBtnIndex: state.focusedSlideNavigationBtnIndex,
+        focusedSliderActionBtnIndex: state.focusedSliderActionBtnIndex,
+        isShowMoreTvShowsFocused: false,
+        isMovieItemsFocused: false,
+        isShowMoreMoviesFocused: false,
+        isTvShowItemsFocused: false));
 
     try {
       final List<MovieModel> trendingMovies = await _homeRepository.getRawTrendingMovies();
@@ -346,6 +541,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           isAnnouncementBtnFocused: state.isAnnouncementBtnFocused,
           focusedSlideNavigationBtnIndex: state.focusedSlideNavigationBtnIndex,
           focusedSliderActionBtnIndex: state.focusedSliderActionBtnIndex,
+          isShowMoreTvShowsFocused: false,
+          isMovieItemsFocused: false,
+          isShowMoreMoviesFocused: false,
+          isTvShowItemsFocused: false,
         ),
       );
       emit(HomeMoviesLoaded(
@@ -368,6 +567,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         isAnnouncementBtnFocused: state.isAnnouncementBtnFocused,
         focusedSlideNavigationBtnIndex: state.focusedSlideNavigationBtnIndex,
         focusedSliderActionBtnIndex: state.focusedSliderActionBtnIndex,
+        isShowMoreTvShowsFocused: false,
+        isMovieItemsFocused: false,
+        isShowMoreMoviesFocused: false,
+        isTvShowItemsFocused: false,
       ));
 
       final List<TvShowModel> trendingShows = await _homeRepository.getRawTrendingTvShows();
@@ -395,6 +598,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         isAnnouncementBtnFocused: state.isAnnouncementBtnFocused,
         focusedSlideNavigationBtnIndex: state.focusedSlideNavigationBtnIndex,
         focusedSliderActionBtnIndex: state.focusedSliderActionBtnIndex,
+        isShowMoreTvShowsFocused: false,
+        isMovieItemsFocused: false,
+        isShowMoreMoviesFocused: false,
+        isTvShowItemsFocused: false,
       ));
 
       _fetchPostersInBackground(trendingMovies, trendingShows);
@@ -422,6 +629,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
 
         // Initial empty maps
         tvShowPosters: {}, // Initial empty maps
+        isShowMoreTvShowsFocused: state.isShowMoreTvShowsFocused,
+        isShowMoreMoviesFocused: state.isShowMoreMoviesFocused,
+        isMovieItemsFocused: state.isMovieItemsFocused,
+        isTvShowItemsFocused: state.isTvShowItemsFocused,
         isAnnouncementBtnFocused: state.isAnnouncementBtnFocused,
         focusedSlideNavigationBtnIndex: state.focusedSlideNavigationBtnIndex,
         focusedSliderActionBtnIndex: state.focusedSliderActionBtnIndex,
@@ -436,6 +647,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         errorMessage: e.toString(),
         // Optionally add previous data if needed for display
         isAnnouncementBtnFocused: state.isAnnouncementBtnFocused,
+        isShowMoreTvShowsFocused: state.isShowMoreTvShowsFocused,
+        isShowMoreMoviesFocused: state.isShowMoreMoviesFocused,
+        isMovieItemsFocused: state.isMovieItemsFocused,
+        isTvShowItemsFocused: state.isTvShowItemsFocused,
         focusedSlideNavigationBtnIndex: state.focusedSlideNavigationBtnIndex,
         focusedSliderActionBtnIndex: state.focusedSliderActionBtnIndex,
       ));
@@ -527,6 +742,10 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         moviePosters: currentMoviePosters,
         tvShowPosters: currentTvShowPosters,
         isAnnouncementBtnFocused: state.isAnnouncementBtnFocused,
+        isShowMoreTvShowsFocused: state.isShowMoreTvShowsFocused,
+        isShowMoreMoviesFocused: state.isShowMoreMoviesFocused,
+        isMovieItemsFocused: state.isMovieItemsFocused,
+        isTvShowItemsFocused: state.isTvShowItemsFocused,
         focusedSlideNavigationBtnIndex: state.focusedSlideNavigationBtnIndex,
         focusedSliderActionBtnIndex: state.focusedSliderActionBtnIndex,
       ));

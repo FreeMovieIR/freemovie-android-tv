@@ -123,13 +123,6 @@ class _HomeViewState extends State<_HomeView> {
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<HomeBloc, HomeState>(
-      // Add listenWhen for better performance (optional but recommended)
-      listenWhen: (previous, current) {
-        return previous.scrollToOffset != current.scrollToOffset ||
-            previous.focusedNavIndex != current.focusedNavIndex ||
-            previous.focusedSectionIndex != current.focusedSectionIndex ||
-            previous.sliderIndex != current.sliderIndex;
-      },
       listener: (context, state) {
         // Request focus based on BLoC state
         if (state.focusedNavIndex >= 0) {
@@ -139,6 +132,28 @@ class _HomeViewState extends State<_HomeView> {
         } else if (state.focusedSectionIndex >= 0) {
           if (!_sectionFocusNodes[state.focusedSectionIndex].hasFocus) {
             _sectionFocusNodes[state.focusedSectionIndex].requestFocus();
+          }
+        }
+
+        // Handle slider action buttons focus
+        if (state.focusedSliderActionBtnIndex == playSliderActionBtnIndex) {
+          if (!playButtonFocus.hasFocus) {
+            playButtonFocus.requestFocus();
+          }
+        } else if (state.focusedSliderActionBtnIndex == bookmarkSliderActionBtnIndex) {
+          if (!bookmarkButtonFocus.hasFocus) {
+            bookmarkButtonFocus.requestFocus();
+          }
+        }
+
+        // Handle slider navigation buttons focus
+        if (state.focusedSlideNavigationBtnIndex == sliderNextNavigationBtnIndex) {
+          if (!nextSliderButtonFocus.hasFocus) {
+            nextSliderButtonFocus.requestFocus();
+          }
+        } else if (state.focusedSlideNavigationBtnIndex == sliderPrevNavigationBtnIndex) {
+          if (!prevSliderButtonFocus.hasFocus) {
+            prevSliderButtonFocus.requestFocus();
           }
         }
 
@@ -159,6 +174,17 @@ class _HomeViewState extends State<_HomeView> {
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOut,
             );
+          }
+        }
+
+        // Handle focus for show more buttons
+        if (state.isShowMoreMoviesFocused) {
+          if (!movieShowMoreButtonFocus.hasFocus) {
+            movieShowMoreButtonFocus.requestFocus();
+          }
+        } else if (state.isShowMoreTvShowsFocused) {
+          if (!tvShowShowMoreButtonFocus.hasFocus) {
+            tvShowShowMoreButtonFocus.requestFocus();
           }
         }
       },
@@ -236,35 +262,35 @@ class _HomeViewState extends State<_HomeView> {
             child: Row(
               children: [
                 _buildNavigationItem(context, 'خانه',
-                    isFocused: homeState.focusedNavIndex == 0,
+                    isFocused: homeState.focusedNavIndex == homeNavIndex,
                     isSelected: true,
-                    focusNode: _navFocusNodes[0],
-                    index: 0),
+                    focusNode: _navFocusNodes[homeNavIndex],
+                    index: homeNavIndex),
                 _buildNavigationItem(context, 'نشان‌شده‌ها',
-                    isFocused: homeState.focusedNavIndex == 1,
+                    isFocused: homeState.focusedNavIndex == bookmarkNavIndex,
                     isSelected: false,
-                    focusNode: _navFocusNodes[1],
-                    index: 1),
+                    focusNode: _navFocusNodes[bookmarkNavIndex],
+                    index: bookmarkNavIndex),
                 _buildNavigationItem(context, 'توسعه‌دهندگان',
-                    isFocused: homeState.focusedNavIndex == 2,
+                    isFocused: homeState.focusedNavIndex == developersNavIndex,
                     isSelected: false,
-                    focusNode: _navFocusNodes[2],
-                    index: 2),
+                    focusNode: _navFocusNodes[developersNavIndex],
+                    index: developersNavIndex),
                 _buildNavigationItem(context, 'درباره ما',
-                    isFocused: homeState.focusedNavIndex == 3,
+                    isFocused: homeState.focusedNavIndex == aboutNavIndex,
                     isSelected: false,
-                    focusNode: _navFocusNodes[3],
-                    index: 3),
+                    focusNode: _navFocusNodes[aboutNavIndex],
+                    index: aboutNavIndex),
                 _buildNavigationItem(context, 'تنظیمات',
-                    isFocused: homeState.focusedNavIndex == 4,
+                    isFocused: homeState.focusedNavIndex == settingNavIndex,
                     isSelected: false,
-                    focusNode: _navFocusNodes[4],
-                    index: 4),
+                    focusNode: _navFocusNodes[settingNavIndex],
+                    index: settingNavIndex),
                 Spacer(),
                 SearchField(
-                    isFocused: homeState.focusedNavIndex == 5,
-                    focusNode: _navFocusNodes[5],
-                    index: 5),
+                    isFocused: homeState.focusedNavIndex == searchNavIndex,
+                    focusNode: _navFocusNodes[searchNavIndex],
+                    index: searchNavIndex),
                 Spacer(),
                 Assets.images.logo.image(height: 38),
               ],
@@ -278,16 +304,20 @@ class _HomeViewState extends State<_HomeView> {
               children: [
                 /// Announcement banner
                 AnnouncementBanner(
-                  focusNode: _sectionFocusNodes.length > 4 ? _sectionFocusNodes[0] : FocusNode(),
-                  isFocused: homeState.focusedSectionIndex == 0,
+                  focusNode: _sectionFocusNodes.length > sectionIndexCount
+                      ? _sectionFocusNodes[announcementSectionIndex]
+                      : FocusNode(),
+                  isFocused: homeState.focusedSectionIndex == announcementSectionIndex,
                 ),
 
                 /// Featured Content Slider
                 const SizedBox(height: 24),
                 ContentSlider(
                   items: homeState.sliderItems,
-                  focusNode: _sectionFocusNodes.length > 4 ? _sectionFocusNodes[1] : FocusNode(),
-                  isFocused: homeState.focusedSectionIndex == 1,
+                  focusNode: _sectionFocusNodes.length > sectionIndexCount
+                      ? _sectionFocusNodes[sliderSectionIndex]
+                      : FocusNode(),
+                  isFocused: homeState.focusedSectionIndex == sliderSectionIndex,
                   playBtnFN: playButtonFocus,
                   bookmarkBtnFN: bookmarkButtonFocus,
                   nextBtnFN: nextSliderButtonFocus,
@@ -297,19 +327,23 @@ class _HomeViewState extends State<_HomeView> {
                   currentSliderIndex: homeState.sliderIndex,
                   pageController: _pageController,
                 ),
+
                 const SizedBox(height: 24),
 
                 /// Latest Movies Section
                 if (latestMovies.isNotEmpty)
                   _buildContentSection(
                     context,
-                    focusNode: _sectionFocusNodes[2],
-                    isFocused: homeState.focusedSectionIndex == 2,
+                    title: 'جدیدترین فیلم‌ها',
+                    focusNode: _sectionFocusNodes[moviesSectionIndex],
+                    isFocused: homeState.focusedSectionIndex == moviesSectionIndex,
+                    isBtnFocused: homeState.isShowMoreMoviesFocused,
+                    showMoreBtnFN: movieShowMoreButtonFocus,
                     child: MovieRow(
-                      title: 'جدیدترین فیلم‌ها',
                       movies: latestMovies,
                       posterPaths: moviePosters,
-                      isFocused: homeState.focusedSectionIndex == 2,
+                      // isFocused: homeState.focusedSectionIndex == moviesSectionIndex,
+                      isFocused: homeState.isMovieItemsFocused,
                     ),
                   ),
 
@@ -318,13 +352,16 @@ class _HomeViewState extends State<_HomeView> {
                     (homeState is HomeTvShowsLoaded || homeState is HomeLoaded))
                   _buildContentSection(
                     context,
-                    focusNode: _sectionFocusNodes[3],
-                    isFocused: homeState.focusedSectionIndex == 3,
+                    title: 'سریال‌های محبوب',
+                    focusNode: _sectionFocusNodes[tvShowsSectionIndex],
+                    isFocused: homeState.focusedSectionIndex == tvShowsSectionIndex,
+                    isBtnFocused: homeState.isShowMoreTvShowsFocused,
+                    showMoreBtnFN: tvShowShowMoreButtonFocus,
                     child: TvShowRow(
-                      title: 'سریال‌های محبوب',
                       tvShows: popularTvShows,
                       posterPaths: tvShowPosters,
-                      isFocused: homeState.focusedSectionIndex == 3,
+                      // isFocused: homeState.focusedSectionIndex == tvShowsSectionIndex,
+                      isFocused: homeState.isTvShowItemsFocused,
                     ),
                   ),
               ],
@@ -370,7 +407,10 @@ class _HomeViewState extends State<_HomeView> {
     BuildContext context, {
     required FocusNode focusNode,
     required bool isFocused,
+    required bool isBtnFocused,
     required Widget child,
+    required String title,
+    required FocusNode showMoreBtnFN,
   }) {
     return Focus(
       focusNode: focusNode,
@@ -380,7 +420,52 @@ class _HomeViewState extends State<_HomeView> {
               isFocused ? Border.all(color: Theme.of(context).colorScheme.primary, width: 2) : null,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: child,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: isFocused ? Theme.of(context).colorScheme.primary : Colors.white,
+                    ),
+                  ),
+                  Focus(
+                    focusNode: showMoreBtnFN,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isBtnFocused
+                            ? Theme.of(context).colorScheme.primary
+                            : Colors.transparent,
+                        border: Border.all(
+                            width: 1,
+                            color: isBtnFocused
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.transparent),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        'مشاهده همه',
+                        style: TextStyle(
+                          color: isBtnFocused ? Colors.black : Colors.white,
+                          fontSize: 11,
+                          fontWeight: isBtnFocused ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ),
+            child,
+          ],
+        ),
       ),
     );
   }

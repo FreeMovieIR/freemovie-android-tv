@@ -19,7 +19,7 @@ const int tvShowsSectionIndex = 3;
 // Sections Scroll Offset
 const double announcementSectionOffset = 0;
 const double sliderSectionOffset = 100;
-const double movieSectionOffset = 550;
+const double movieSectionOffset = 500;
 const double tvShowSectionOffset = 1400;
 
 // Slider Action Buttons Focus Index

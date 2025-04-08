@@ -6,6 +6,10 @@ sealed class HomeState extends Equatable {
   final bool isAnnouncementBtnFocused; // false for not selected, true for selected
   final int focusedSliderActionBtnIndex; // -1 for not selected, 0-1 for buttons
   final int focusedSlideNavigationBtnIndex; // -1 for not selected, 0-1 for buttons
+  final bool isShowMoreMoviesFocused;
+  final bool isShowMoreTvShowsFocused;
+  final bool isMovieItemsFocused;
+  final bool isTvShowItemsFocused;
   final double? scrollToOffset; // Target scroll offset, null if no scroll needed
   final List<MovieModel> trendingMovies;
   final List<TvShowModel> trendingTvShows;
@@ -19,6 +23,10 @@ sealed class HomeState extends Equatable {
     required this.isAnnouncementBtnFocused,
     required this.focusedSliderActionBtnIndex,
     required this.focusedSlideNavigationBtnIndex,
+    required this.isShowMoreMoviesFocused,
+    required this.isShowMoreTvShowsFocused,
+    required this.isMovieItemsFocused,
+    required this.isTvShowItemsFocused,
     this.scrollToOffset,
     this.trendingMovies = const [],
     this.trendingTvShows = const [],
@@ -34,6 +42,10 @@ sealed class HomeState extends Equatable {
         isAnnouncementBtnFocused,
         focusedSliderActionBtnIndex,
         focusedSlideNavigationBtnIndex,
+        isShowMoreMoviesFocused,
+        isShowMoreTvShowsFocused,
+        isMovieItemsFocused,
+        isTvShowItemsFocused,
         scrollToOffset,
         trendingMovies,
         trendingTvShows,
@@ -48,6 +60,10 @@ sealed class HomeState extends Equatable {
     bool? isAnnouncementBtnFocused,
     int? focusedSliderActionBtnIndex,
     int? focusedSlideNavigationBtnIndex,
+    bool? isShowMoreMoviesFocused,
+    bool? isShowMoreTvShowsFocused,
+    bool? isMovieItemsFocused,
+    bool? isTvShowItemsFocused,
     double? scrollToOffset,
     bool setScrollToNull = false,
     List<MovieModel>? trendingMovies,
@@ -69,6 +85,10 @@ sealed class HomeState extends Equatable {
         moviePosters: current.moviePosters,
         tvShowPosters: current.tvShowPosters,
         isAnnouncementBtnFocused: isAnnouncementBtnFocused ?? this.isAnnouncementBtnFocused,
+        isShowMoreTvShowsFocused: isShowMoreTvShowsFocused ?? this.isShowMoreTvShowsFocused,
+        isShowMoreMoviesFocused: isShowMoreMoviesFocused ?? this.isShowMoreMoviesFocused,
+        isMovieItemsFocused: isMovieItemsFocused ?? this.isMovieItemsFocused,
+        isTvShowItemsFocused: isTvShowItemsFocused ?? this.isTvShowItemsFocused,
         focusedSliderActionBtnIndex:
             focusedSliderActionBtnIndex ?? this.focusedSliderActionBtnIndex,
         focusedSlideNavigationBtnIndex:
@@ -86,6 +106,10 @@ sealed class HomeState extends Equatable {
             focusedSliderActionBtnIndex ?? this.focusedSliderActionBtnIndex,
         focusedSlideNavigationBtnIndex:
             focusedSlideNavigationBtnIndex ?? this.focusedSlideNavigationBtnIndex,
+        isMovieItemsFocused: isMovieItemsFocused ?? this.isMovieItemsFocused,
+        isTvShowItemsFocused: isTvShowItemsFocused ?? this.isTvShowItemsFocused,
+        isShowMoreMoviesFocused: isShowMoreMoviesFocused ?? this.isShowMoreMoviesFocused,
+        isShowMoreTvShowsFocused: isShowMoreTvShowsFocused ?? this.isShowMoreTvShowsFocused,
       );
     } else if (this is HomeMoviesLoaded) {
       final current = this as HomeMoviesLoaded;
@@ -100,6 +124,10 @@ sealed class HomeState extends Equatable {
             focusedSliderActionBtnIndex ?? this.focusedSliderActionBtnIndex,
         focusedSlideNavigationBtnIndex:
             focusedSlideNavigationBtnIndex ?? this.focusedSlideNavigationBtnIndex,
+        isMovieItemsFocused: isMovieItemsFocused ?? this.isMovieItemsFocused,
+        isTvShowItemsFocused: isTvShowItemsFocused ?? this.isTvShowItemsFocused,
+        isShowMoreMoviesFocused: isShowMoreMoviesFocused ?? this.isShowMoreMoviesFocused,
+        isShowMoreTvShowsFocused: isShowMoreTvShowsFocused ?? this.isShowMoreTvShowsFocused,
       );
     } else if (this is HomeTvShowsLoaded) {
       final current = this as HomeTvShowsLoaded;
@@ -116,6 +144,10 @@ sealed class HomeState extends Equatable {
             focusedSliderActionBtnIndex ?? this.focusedSliderActionBtnIndex,
         focusedSlideNavigationBtnIndex:
             focusedSlideNavigationBtnIndex ?? this.focusedSlideNavigationBtnIndex,
+        isMovieItemsFocused: isMovieItemsFocused ?? this.isMovieItemsFocused,
+        isTvShowItemsFocused: isTvShowItemsFocused ?? this.isTvShowItemsFocused,
+        isShowMoreMoviesFocused: isShowMoreMoviesFocused ?? this.isShowMoreMoviesFocused,
+        isShowMoreTvShowsFocused: isShowMoreTvShowsFocused ?? this.isShowMoreTvShowsFocused,
       );
     } else if (this is HomeInitial) {
       return HomeInitial(
@@ -131,10 +163,14 @@ sealed class HomeState extends Equatable {
         scrollToOffset: setScrollToNull ? null : scrollToOffset ?? this.scrollToOffset,
         errorMessage: currentError.errorMessage!, // Keep existing error message
         isAnnouncementBtnFocused: isAnnouncementBtnFocused ?? this.isAnnouncementBtnFocused,
+        isShowMoreMoviesFocused: isShowMoreMoviesFocused ?? this.isShowMoreMoviesFocused,
+        isShowMoreTvShowsFocused: isShowMoreTvShowsFocused ?? this.isShowMoreTvShowsFocused,
         focusedSliderActionBtnIndex:
             focusedSliderActionBtnIndex ?? this.focusedSliderActionBtnIndex,
         focusedSlideNavigationBtnIndex:
             focusedSlideNavigationBtnIndex ?? this.focusedSlideNavigationBtnIndex,
+        isMovieItemsFocused: isMovieItemsFocused ?? this.isMovieItemsFocused,
+        isTvShowItemsFocused: isTvShowItemsFocused ?? this.isTvShowItemsFocused,
       );
     } else if (this is HomeLoading) {
       return HomeLoading(
@@ -146,6 +182,10 @@ sealed class HomeState extends Equatable {
             focusedSliderActionBtnIndex ?? this.focusedSliderActionBtnIndex,
         focusedSlideNavigationBtnIndex:
             focusedSlideNavigationBtnIndex ?? this.focusedSlideNavigationBtnIndex,
+        isMovieItemsFocused: isMovieItemsFocused ?? this.isMovieItemsFocused,
+        isTvShowItemsFocused: isTvShowItemsFocused ?? this.isTvShowItemsFocused,
+        isShowMoreMoviesFocused: isShowMoreMoviesFocused ?? this.isShowMoreMoviesFocused,
+        isShowMoreTvShowsFocused: isShowMoreTvShowsFocused ?? this.isShowMoreTvShowsFocused,
       );
     }
     return this;
@@ -157,9 +197,13 @@ final class HomeInitial extends HomeState {
     super.focusedSectionIndex = notSelectedIndex,
     super.focusedNavIndex = homeNavIndex, // Start with Home focused
     super.scrollToOffset,
+    super.isShowMoreMoviesFocused = false,
+    super.isShowMoreTvShowsFocused = false,
     super.isAnnouncementBtnFocused = false,
     super.focusedSliderActionBtnIndex = notSelectedIndex,
     super.focusedSlideNavigationBtnIndex = notSelectedIndex,
+    super.isMovieItemsFocused = false,
+    super.isTvShowItemsFocused = false,
   });
 }
 
@@ -171,6 +215,10 @@ final class HomeLoading extends HomeState {
     required super.isAnnouncementBtnFocused,
     required super.focusedSliderActionBtnIndex,
     required super.focusedSlideNavigationBtnIndex,
+    required super.isMovieItemsFocused,
+    required super.isTvShowItemsFocused,
+    required super.isShowMoreMoviesFocused,
+    required super.isShowMoreTvShowsFocused,
   });
 }
 
@@ -186,6 +234,10 @@ final class HomeSlidesLoaded extends HomeState {
     required super.isAnnouncementBtnFocused,
     required super.focusedSliderActionBtnIndex,
     required super.focusedSlideNavigationBtnIndex,
+    required super.isShowMoreMoviesFocused,
+    required super.isShowMoreTvShowsFocused,
+    required super.isMovieItemsFocused,
+    required super.isTvShowItemsFocused,
   });
 
   @override
@@ -215,6 +267,10 @@ final class HomeMoviesLoaded extends HomeState {
     required super.isAnnouncementBtnFocused,
     required super.focusedSliderActionBtnIndex,
     required super.focusedSlideNavigationBtnIndex,
+    required super.isMovieItemsFocused,
+    required super.isTvShowItemsFocused,
+    required super.isShowMoreMoviesFocused,
+    required super.isShowMoreTvShowsFocused,
   });
 
   @override
@@ -248,6 +304,10 @@ final class HomeTvShowsLoaded extends HomeState {
     required super.isAnnouncementBtnFocused,
     required super.focusedSliderActionBtnIndex,
     required super.focusedSlideNavigationBtnIndex,
+    required super.isMovieItemsFocused,
+    required super.isTvShowItemsFocused,
+    required super.isShowMoreMoviesFocused,
+    required super.isShowMoreTvShowsFocused,
   });
 
   @override
@@ -285,9 +345,13 @@ final class HomeLoaded extends HomeState {
     required this.trendingTvShows,
     required this.moviePosters,
     required this.tvShowPosters,
+    required super.isShowMoreMoviesFocused,
+    required super.isShowMoreTvShowsFocused,
     required super.isAnnouncementBtnFocused,
     required super.focusedSliderActionBtnIndex,
     required super.focusedSlideNavigationBtnIndex,
+    required super.isMovieItemsFocused,
+    required super.isTvShowItemsFocused,
   });
 
   @override
@@ -301,7 +365,9 @@ final class HomeLoaded extends HomeState {
         tvShowPosters,
         isAnnouncementBtnFocused,
         focusedSliderActionBtnIndex,
-        focusedSlideNavigationBtnIndex
+        focusedSlideNavigationBtnIndex,
+        isShowMoreTvShowsFocused,
+        isShowMoreMoviesFocused,
       ];
 
   HomeLoaded copyWithPosters({
@@ -319,6 +385,10 @@ final class HomeLoaded extends HomeState {
       moviePosters: moviePosters ?? this.moviePosters,
       tvShowPosters: tvShowPosters ?? this.tvShowPosters,
       isAnnouncementBtnFocused: isAnnouncementBtnFocused,
+      isShowMoreTvShowsFocused: isShowMoreTvShowsFocused,
+      isShowMoreMoviesFocused: isShowMoreMoviesFocused,
+      isMovieItemsFocused: isMovieItemsFocused,
+      isTvShowItemsFocused: isTvShowItemsFocused,
       focusedSliderActionBtnIndex: focusedSliderActionBtnIndex,
       focusedSlideNavigationBtnIndex: focusedSlideNavigationBtnIndex,
     );
@@ -332,8 +402,12 @@ final class HomeError extends HomeState {
     super.scrollToOffset,
     required String super.errorMessage,
     required super.isAnnouncementBtnFocused,
+    required super.isShowMoreMoviesFocused,
+    required super.isShowMoreTvShowsFocused,
     required super.focusedSliderActionBtnIndex,
     required super.focusedSlideNavigationBtnIndex,
+    required super.isMovieItemsFocused,
+    required super.isTvShowItemsFocused,
   });
 
   @override

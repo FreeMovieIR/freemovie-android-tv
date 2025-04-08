@@ -7,14 +7,12 @@ import '../data/model/movie.dart';
 import 'movie_card.dart';
 
 class MovieRow extends StatefulWidget {
-  final String title;
   final List<MovieModel> movies;
   final bool isFocused;
   final Map<int, String>? posterPaths;
 
   const MovieRow({
     super.key,
-    required this.title,
     required this.movies,
     this.isFocused = false,
     this.posterPaths,
@@ -147,88 +145,54 @@ class _MovieRowState extends State<MovieRow> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                widget.title,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: widget.isFocused ? Theme.of(context).colorScheme.primary : Colors.white,
-                ),
-              ),
-              TextButton(
-                  onPressed: () {
-                    // TODO: navigate to movies list
-                  },
-                  child: Row(
-                    children: [
-                      Text(
-                        'مشاهده همه',
-                        style: TextStyle(fontSize: 12),
-                      ),
-                      Icon(Icons.chevron_right_rounded, size: 20),
-                    ],
-                  ))
-            ],
-          ),
-        ),
-        SizedBox(
-          height: 315,
-          child: KeyboardListener(
-            focusNode: _rowFocusNode,
-            onKeyEvent: _handleKeyEvent,
-            child: ListView.builder(
-              controller: _scrollController,
-              scrollDirection: Axis.horizontal,
-              itemCount: widget.movies.length,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemBuilder: (context, index) {
-                final movie = widget.movies[index];
-                final String? posterUrl = widget.posterPaths?[movie.id];
+    return SizedBox(
+      height: 315,
+      child: KeyboardListener(
+        focusNode: _rowFocusNode,
+        onKeyEvent: _handleKeyEvent,
+        child: ListView.builder(
+          controller: _scrollController,
+          scrollDirection: Axis.horizontal,
+          itemCount: widget.movies.length,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemBuilder: (context, index) {
+            final movie = widget.movies[index];
+            final String? posterUrl = widget.posterPaths?[movie.id];
 
-                return Focus(
-                  focusNode: _cardFocusNodes[index],
-                  canRequestFocus: widget.isFocused,
-                  onFocusChange: (hasFocus) {
-                    if (hasFocus && widget.isFocused && !_processingFocusEvent) {
-                      _processingFocusEvent = true;
-                      setState(() {
-                        _focusedIndex = index;
-                      });
-                      _scrollToFocusedItem();
-                      Timer(const Duration(milliseconds: 100), () {
-                        _processingFocusEvent = false;
-                      });
-                    }
-                  },
-                  child: MovieCard(
-                    movie: movie,
-                    posterUrl: posterUrl,
-                    isFocused: widget.isFocused && index == _focusedIndex,
-                    onTap: () {
-                      _processingFocusEvent = true;
-                      setState(() {
-                        _focusedIndex = index;
-                      });
-                      _cardFocusNodes[index].requestFocus();
-                      Timer(const Duration(milliseconds: 100), () {
-                        _processingFocusEvent = false;
-                      });
-                    },
-                  ),
-                );
+            return Focus(
+              focusNode: _cardFocusNodes[index],
+              canRequestFocus: widget.isFocused,
+              onFocusChange: (hasFocus) {
+                if (hasFocus && widget.isFocused && !_processingFocusEvent) {
+                  _processingFocusEvent = true;
+                  setState(() {
+                    _focusedIndex = index;
+                  });
+                  _scrollToFocusedItem();
+                  Timer(const Duration(milliseconds: 100), () {
+                    _processingFocusEvent = false;
+                  });
+                }
               },
-            ),
-          ),
+              child: MovieCard(
+                movie: movie,
+                posterUrl: posterUrl,
+                isFocused: widget.isFocused && index == _focusedIndex,
+                onTap: () {
+                  _processingFocusEvent = true;
+                  setState(() {
+                    _focusedIndex = index;
+                  });
+                  _cardFocusNodes[index].requestFocus();
+                  Timer(const Duration(milliseconds: 100), () {
+                    _processingFocusEvent = false;
+                  });
+                },
+              ),
+            );
+          },
         ),
-      ],
+      ),
     );
   }
 }
