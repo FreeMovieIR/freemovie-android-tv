@@ -50,3 +50,12 @@ final class HomeSectionFocused extends HomeEvent {
   @override
   List<Object?> get props => [sectionIndex];
 }
+
+final class HomeSliderIndexChanged extends HomeEvent {
+  final int index;
+
+  const HomeSliderIndexChanged(this.index);
+
+  @override
+  List<Object?> get props => [index];
+}

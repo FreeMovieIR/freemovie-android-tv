@@ -50,16 +50,16 @@ class _HomeViewState extends State<_HomeView> {
 
   final ScrollController _scrollController = ScrollController();
 
-  // Declare PageController
-  late PageController _pageController;
+  // Create a properly initialized PageController
+  final PageController _pageController = PageController(initialPage: 0);
 
   @override
   void initState() {
     super.initState();
     context.read<HomeBloc>().add(HomeLoadData());
 
-    // Initialize PageController
-    _pageController = PageController();
+    // Remove the PageController listener as it might cause conflicts with key navigation
+    // We'll rely solely on the bloc for slider navigation
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
@@ -98,24 +98,38 @@ class _HomeViewState extends State<_HomeView> {
     for (var node in _sectionFocusNodes) {
       node.dispose();
     }
+    playButtonFocus.dispose();
+    bookmarkButtonFocus.dispose();
+    nextSliderButtonFocus.dispose();
+    prevSliderButtonFocus.dispose();
+    movieShowMoreButtonFocus.dispose();
+    tvShowShowMoreButtonFocus.dispose();
     _scrollController.dispose();
-    // Dispose PageController
     _pageController.dispose();
     super.dispose();
   }
 
   void _handleKeyEvent(KeyEvent event, BuildContext context) {
-    if (event is KeyDownEvent || event is KeyUpEvent) {
+    // Only process key down events to avoid duplicate processing
+    if (event is KeyDownEvent) {
       context.read<HomeBloc>().add(HomeKeyPressed(event.logicalKey));
     }
   }
 
+  // Make scrolling more reliable
   void _scrollToOffset(double offset) {
-    if (_scrollController.hasClients) {
+    if (!_scrollController.hasClients) return;
+
+    // Directly jump to the position for more reliability
+    if (offset == sliderSectionOffset) {
+      // For slider section, ensure visibility with a slight buffer
+      _scrollController.jumpTo(offset.clamp(0, _scrollController.position.maxScrollExtent));
+    } else {
+      // For other sections, use smooth animation
       _scrollController.animateTo(
-        offset.clamp(0.0, _scrollController.position.maxScrollExtent),
-        duration: const Duration(milliseconds: 400),
-        curve: Curves.easeInOut,
+        offset.clamp(0, _scrollController.position.maxScrollExtent),
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.fastOutSlowIn,
       );
     }
   }
@@ -124,7 +138,7 @@ class _HomeViewState extends State<_HomeView> {
   Widget build(BuildContext context) {
     return BlocConsumer<HomeBloc, HomeState>(
       listener: (context, state) {
-        // Request focus based on BLoC state
+        // Handle navigation focus
         if (state.focusedNavIndex >= 0) {
           if (!_navFocusNodes[state.focusedNavIndex].hasFocus) {
             _navFocusNodes[state.focusedNavIndex].requestFocus();
@@ -157,27 +171,42 @@ class _HomeViewState extends State<_HomeView> {
           }
         }
 
-        // Handle scrolling based on BLoC state
+        // Ensure scrolling happens for any slider or nav button focus
         if (state.scrollToOffset != null) {
-          _scrollToOffset(state.scrollToOffset!);
+          // Specifically handle slider section scrolling for buttons
+          bool isSliderButtonFocused = (state.focusedSectionIndex == sliderSectionIndex &&
+              (state.focusedSliderActionBtnIndex >= 0 ||
+                  state.focusedSlideNavigationBtnIndex >= 0));
+
+          if (isSliderButtonFocused && state.scrollToOffset != sliderSectionOffset) {
+            // Force slider section scrolling when any slider button is focused
+            _scrollToOffset(sliderSectionOffset);
+          } else {
+            _scrollToOffset(state.scrollToOffset!);
+          }
         }
 
-        // Animate slider based on BLoC state's sliderIndex
+        // Handle slider page changes
         if ((state is HomeLoaded ||
             state is HomeTvShowsLoaded ||
             state is HomeSlidesLoaded ||
             state is HomeMoviesLoaded)) {
-          final currentSliderIndex = state.sliderIndex;
-          if (_pageController.hasClients && _pageController.page?.round() != currentSliderIndex) {
-            _pageController.animateToPage(
-              currentSliderIndex,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeInOut,
-            );
+          if (_pageController.hasClients) {
+            // Ensure the slider animates to the correct page
+            final targetPage = state.sliderIndex;
+            final currentPage = _pageController.page?.round() ?? 0;
+
+            if (targetPage != currentPage) {
+              _pageController.animateToPage(
+                targetPage,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            }
           }
         }
 
-        // Handle focus for show more buttons
+        // Handle "show more" button focus
         if (state.isShowMoreMoviesFocused) {
           if (!movieShowMoreButtonFocus.hasFocus) {
             movieShowMoreButtonFocus.requestFocus();
@@ -326,6 +355,12 @@ class _HomeViewState extends State<_HomeView> {
                   slideNavigationFocusIndex: homeState.focusedSlideNavigationBtnIndex,
                   currentSliderIndex: homeState.sliderIndex,
                   pageController: _pageController,
+                  onPageChanged: (index) {
+                    // Report the page change back to the Bloc
+                    if (index != homeState.sliderIndex) {
+                      context.read<HomeBloc>().add(HomeSliderIndexChanged(index));
+                    }
+                  },
                 ),
 
                 const SizedBox(height: 24),

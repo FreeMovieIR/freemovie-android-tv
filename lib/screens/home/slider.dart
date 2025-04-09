@@ -39,6 +39,7 @@ class ContentSlider extends StatelessWidget {
   final int slideNavigationFocusIndex;
   final int currentSliderIndex;
   final PageController pageController;
+  final Function(int)? onPageChanged;
 
   const ContentSlider(
       {super.key,
@@ -52,7 +53,8 @@ class ContentSlider extends StatelessWidget {
       required this.slideActionFocusIndex,
       required this.slideNavigationFocusIndex,
       required this.currentSliderIndex,
-      required this.pageController});
+      required this.pageController,
+      this.onPageChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -75,6 +77,8 @@ class ContentSlider extends StatelessWidget {
             child: PageView.builder(
               controller: pageController,
               itemCount: items.length,
+              onPageChanged: onPageChanged,
+              physics: const AlwaysScrollableScrollPhysics(),
               itemBuilder: (context, index) {
                 final item = items[index];
                 return _buildSlide(

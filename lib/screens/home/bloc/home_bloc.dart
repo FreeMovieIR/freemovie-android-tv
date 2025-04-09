@@ -30,6 +30,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     on<HomeSectionFocused>(_onSectionFocused);
     on<HomeKeyPressed>(_onKeyPressed);
     on<HomePosterFetched>(_onPosterFetched);
+    on<HomeSliderIndexChanged>(_onSliderIndexChanged);
   }
 
   @override
@@ -180,7 +181,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
               ));
             }
             // Do nothing
-            else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {}
+            else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+              emit(state.copyWith(
+                focusedSliderActionBtnIndex: playSliderActionBtnIndex,
+                scrollToOffset: sliderSectionOffset,
+              ));
+            }
           }
           // Bookmark Btn
           else if (state.focusedSliderActionBtnIndex == bookmarkSliderActionBtnIndex) {
@@ -189,6 +195,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
               emit(state.copyWith(
                 focusedSlideNavigationBtnIndex: sliderNextNavigationBtnIndex,
                 focusedSliderActionBtnIndex: notSelectedIndex,
+                scrollToOffset: sliderSectionOffset,
               ));
             }
             // Go Back to Announcement Section
@@ -249,15 +256,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
                 debugPrint("Forced immediate key processing reset");
               });
             }
-            // do nothing
-            else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-            }
             // navigate to prev slide btn
             else if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
               emit(state.copyWith(
                 focusedSliderActionBtnIndex: notSelectedIndex,
-                scrollToOffset: sliderSectionOffset,
                 focusedSlideNavigationBtnIndex: sliderPrevNavigationBtnIndex,
+                scrollToOffset: sliderSectionOffset,
               ));
             }
             // confirm btn /  move slider to next item (Increment)
@@ -270,6 +274,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
                 emit(state.copyWith(
                   focusedSlideNavigationBtnIndex: sliderNextNavigationBtnIndex, // Keep focus
                   sliderIndex: state.sliderIndex + 1, // INCREMENT
+                  scrollToOffset: sliderSectionOffset,
                 ));
               }
             }
@@ -315,8 +320,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
             else if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
               emit(state.copyWith(
                 focusedSliderActionBtnIndex: notSelectedIndex,
-                scrollToOffset: sliderSectionOffset,
                 focusedSlideNavigationBtnIndex: sliderNextNavigationBtnIndex,
+                scrollToOffset: sliderSectionOffset,
               ));
             }
             // do nothing
@@ -332,6 +337,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
                 emit(state.copyWith(
                   focusedSlideNavigationBtnIndex: sliderPrevNavigationBtnIndex, // Keep focus
                   sliderIndex: state.sliderIndex - 1, // DECREMENT
+                  scrollToOffset: sliderSectionOffset,
                 ));
               }
             }
@@ -497,11 +503,12 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           }
         }
       }
+    } catch (e) {
+      debugPrint("Error processing key event: $e");
     } finally {
-      // Reset the processing flag after a short delay - this is critical to prevent getting stuck
-      _keyProcessingTimer = Timer(const Duration(milliseconds: 150), () {
+      // Set a shorter timer duration for better responsiveness
+      _keyProcessingTimer = Timer(const Duration(milliseconds: 100), () {
         _processingKeyEvent = false;
-        debugPrint("Key processing reset");
       });
     }
   }
@@ -750,5 +757,11 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
         focusedSliderActionBtnIndex: state.focusedSliderActionBtnIndex,
       ));
     }
+  }
+
+  void _onSliderIndexChanged(HomeSliderIndexChanged event, Emitter<HomeState> emit) {
+    emit(state.copyWith(
+      sliderIndex: event.index,
+    ));
   }
 }
